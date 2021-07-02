@@ -3,7 +3,7 @@ Collection of backend apps to simulate MS ecosystem. We are using Terraform to d
 
 ## Architecture Flow
 
-The flow pipeline for our tracking system is the ![following](./ArchitectureFlow.png)
+The flow pipeline for our tracking system is the ![following](./ArchitectureFlow.jpg)
 
 ### Deploy services: ###
 
