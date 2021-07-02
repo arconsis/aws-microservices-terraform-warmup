@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  usersService:
+    image: users-service
+    build:
+      context: ./services/usersService
+      dockerfile: Dockerfile
+    container_name: users-service
+    command: npm start
+    ports:
+      - "3000:3000"
+    env_file: ./services/usersService/.env
+    networks:
+      - default
+  booksService:
+    image: books-service
+    build:
+      context: ./services/booksService
+      dockerfile: Dockerfile
+    container_name: books-service
+    command: npm start
+    ports:
+      - "5000:5000"
+    networks:
+      - default
+  recommendationsService:
+    image: recommendations-service
+    build:
+      context: ./services/recommendationsService
+      dockerfile: Dockerfile
+    container_name: recommendations-service
+    command: npm start
+    ports:
+      - "3333:3333"
+    networks:
+      - default

@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "title": "Unlocking Android",
+    "isbn": "1933988673",
+    "pageCount": 416,
+    "status": "PUBLISH",
+    "authors": ["W. Frank Ableson", "Charlie Collins", "Robi Sen"],
+    "categories": ["Open Source", "Mobile"]
+  },
+  {
+    "id": 2,
+    "title": "Android in Action, Second Edition",
+    "isbn": "1935182722",
+    "pageCount": 592,
+    "status": "PUBLISH",
+    "authors": ["W. Frank Ableson", "Robi Sen"],
+    "categories": ["Java"]
+  },
+  {
+    "id": 3,
+    "title": "Visual Object Oriented Programming",
+    "isbn": "131723979",
+    "pageCount": 280,
+    "status": "PUBLISH",
+    "authors": ["Margaret M. Burnett", "Adele Goldberg", "", "Ted G. Lewis"],
+    "categories": ["Programming"]
+  }
+]

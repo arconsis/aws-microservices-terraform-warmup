@@ -1,0 +1,20 @@
+[
+  {
+    "title": "Node.JS Web Development",
+    "authors": ["David Herron"],
+    "categories": ["NodeJS", "Programming", "Backend"],
+    "usersIds": [1, 2]
+  },
+  {
+    "title": "Node.js Design Patterns",
+    "authors": ["Mario Casciaro"],
+    "categories": ["NodeJS", "Programming", "Backend"],
+    "usersIds": [1, 2]
+  },
+  {
+    "title": "Programming JavaScript Applications",
+    "authors": ["Eric Elliot"],
+    "categories": ["Javascript", "Programming"],
+    "usersIds": [1]
+  }
+]
