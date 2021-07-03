@@ -1,72 +1,46 @@
-################################################################################
-# ALB SG
-################################################################################
-resource "aws_security_group" "lb" {
-  name        = "load-balancer-security-group"
-  description = "controls access to the ALB"
-  vpc_id      = aws_vpc.main.id
-
-  # Accept incoming access to port 80 from anywhere
-  ingress {
-    protocol    = "tcp"
-    from_port   = 80
-    to_port     = 80
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    protocol    = "-1"
-    from_port   = 0
-    to_port     = 0
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+locals {
+  this_sg_id = var.create_sg && var.create_sg ? concat(aws_security_group.this.*.id, [""])[0] : var.security_group_id
 }
 
-################################################################################
-# ECS cluster tasks SG
-################################################################################
-resource "aws_security_group" "ecs_tasks" {
-  name        = "ecs-tasks-security-group"
-  description = "allow inbound access from the ALB only"
-  vpc_id      = aws_vpc.main.id
+##########################
+# Security Group
+##########################
+resource "aws_security_group" "this" {
+  count             = var.create_vpc && var.create_sg ? 1 : 0
 
-  # Traffic to the ECS cluster should only come from the ALB SG
-  ingress {
-    from_port = 0
-    to_port   = 0
-    protocol  = "-1"
-    # Only allowing traffic in from the load balancer security group
-    security_groups = [aws_security_group.lb.id]
-  }
-
-  egress {
-    from_port   = 0 # Allowing any incoming port
-    to_port     = 0 # Allowing any outgoing port
-    protocol    = "-1" # Allowing any outgoing protocol 
-    cidr_blocks = ["0.0.0.0/0"] # Allowing traffic out to all IP addresses
-  }
+  name              = var.sg_name
+  description       = var.description
+  vpc_id            = var.vpc_id
 }
 
-################################################################################
-# PRIVATE ECS cluster tasks SG
-################################################################################
-resource "aws_security_group" "private_ecs_tasks" {
-  name        = "private-ecs-tasks-security-group"
-  description = "private ecs tasks, not internet facing. allow inbound access from other ecs tasks only"
-  vpc_id      = aws_vpc.main.id
+#####################################
+# Security Group Ingress Rules
+#####################################
+resource "aws_security_group_rule" "ingress_rules" {
+  security_group_id          = local.this_sg_id
+  type                       = "ingress"
 
-  # Traffic to the ECS cluster should only come from the other ecs tasks in vpc
-  ingress {
-    from_port = 0
-    to_port   = 0
-    protocol  = "-1"
-    cidr_blocks = [var.cidr_block]
-  }
+  cidr_blocks                = var.ingress_cidr_blocks
+  description                = var.rule_ingress_description
 
-  egress {
-    from_port   = 0 # Allowing any incoming port
-    to_port     = 0 # Allowing any outgoing port
-    protocol    = "-1" # Allowing any outgoing protocol
-    cidr_blocks = ["0.0.0.0/0"] # Allowing traffic out to all IP addresses
-  }
+  from_port                  = var.ingress_from_port
+  to_port                    = var.ingress_to_port
+  protocol                   = var.ingress_protocol
+  source_security_group_id   = var.ingress_source_security_group_id
+}
+
+#####################################
+# Security Group Egress Rules
+#####################################
+resource "aws_security_group_rule" "egress_rules" {
+  security_group_id          = local.this_sg_id
+  type                       = "egress"
+
+  cidr_blocks                = var.egress_cidr_blocks
+  description                = var.rule_egress_description
+
+  from_port                  = var.egress_from_port
+  to_port                    = var.egress_to_port
+  protocol                   = var.egress_protocol
+  source_security_group_id   = var.egress_source_security_group_id
 }
