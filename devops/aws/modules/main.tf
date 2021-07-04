@@ -76,10 +76,28 @@ module "private-ecs-tasks-sg" {
   egress_protocol                   = "-1"
 }
 
-# module "alb" {
-# 	source             = "./alb"
-#   alb_name           = "main-ecs-lb"
-#   vpc_id             = module.networking.id
-#   subnet_ids         = module.networking.public_subnet_ids
-#   internal           = true
-# }
+module "alb" {
+	source             = "./alb"
+  create_alb         = true
+  load_balancer_type = "application"
+  alb_name           = "main-ecs-lb"
+  internal           = false
+  vpc_id             = module.networking.vpc_id
+  security_groups    = [module.alb-sg.security_group_id]
+  subnet_ids         = module.networking.public_subnet_ids
+  http_tcp_listeners = [
+    {
+      port           = 80
+      protocol       = "HTTP"
+      action_type    = "fixed-response"
+      fixed_response = {
+        content_type = "text/plain"
+        message_body = "Resource not found"
+        status_code  = "404"
+      }
+    }
+  ]
+}
+
+# before create ecs we have to create with resource the "aws_alb_listener_rule" + "aws_alb_target_group" "books_api_listener_rule"
+# and attach it to each ecs
