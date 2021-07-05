@@ -1,0 +1,40 @@
+####
+# This Dockerfile is used in order to build a container that runs the Quarkus application in JVM mode
+#
+# Build the image with:
+#
+# docker build -f Dockerfile.native -t hero-threeswipes-gw-native .
+#
+# Run the container using:
+#
+# docker run -i --rm -p 8080:8080 hero-threeswipes-gw-native
+#
+# If you want to include the debug port into your docker image
+# you will have to expose the debug port (default 5005) like this:  EXPOSE 8080 5050
+#
+# Then run the container using:
+#
+# docker run -i --rm -p 8080:8080 -p 5005:5005 -e JAVA_ENABLE_DEBUG="true" hero-threeswipes-gw-native
+#
+###
+
+## Stage 1 : build with gradle with native capabilities
+FROM quay.io/quarkus/centos-quarkus-maven:21.1.0-java11 AS build
+COPY src /usr/src/app/src
+COPY build.gradle.kts /usr/src/app
+COPY settings.gradle.kts /usr/src/app
+COPY gradle.properties /usr/src/app
+USER root
+RUN chown -R quarkus /usr/src/app
+USER quarkus
+RUN gradle -b /usr/src/app/build.gradle.kts clean quarkusBuild -Dquarkus.package.type=native
+
+## Stage 2 : create the docker final image
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.3
+WORKDIR /work/
+COPY --chown=1001:root --from=build /usr/src/app/build/*-runner /work/application
+
+EXPOSE 8080
+USER 1001
+
+CMD ["./application", "-Dquarkus.http.host=0.0.0.0"]

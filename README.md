@@ -10,7 +10,7 @@ The flow pipeline for our microservice ecosystem is the ![following](./Architect
 In order to deploy microservices in AWS run the following cmd:
 
 ```shell
-bash deploy.sh
+deploy.sh
 ```
 
 and then specify the ECS deployment type, picking fargate or ec2.
@@ -20,5 +20,5 @@ and then specify the ECS deployment type, picking fargate or ec2.
 In order to destroy clusters from AWS run the following cmd:
 
 ```shell
-bash destroy.sh
+destroy.sh
 ```
