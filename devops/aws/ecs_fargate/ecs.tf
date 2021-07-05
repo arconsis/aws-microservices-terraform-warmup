@@ -66,16 +66,16 @@ resource "aws_service_discovery_service" "recommendations_api_service_discovery"
 data "template_file" "books_api" {
   template = file("../common/templates/ecs/service.json.tpl")
   vars = {
-    service_name         = var.books_api_name
-    image                = var.books_api_image
-    container_port       = var.books_api_port
-    host_port            = var.books_api_port
-    fargate_cpu          = var.fargate_cpu
-    fargate_memory       = var.fargate_memory
-    aws_region           = var.aws_region
-    aws_logs_group       = var.books_api_aws_logs_group
-    network_mode         = var.network_mode
-    service_enviroment   = jsonencode([])
+    service_name       = var.books_api_name
+    image              = var.books_api_image
+    container_port     = var.books_api_port
+    host_port          = var.books_api_port
+    fargate_cpu        = var.fargate_cpu
+    fargate_memory     = var.fargate_memory
+    aws_region         = var.aws_region
+    aws_logs_group     = var.books_api_aws_logs_group
+    network_mode       = var.network_mode
+    service_enviroment = jsonencode([])
   }
 }
 
@@ -127,19 +127,19 @@ data "template_file" "users_api" {
   template = file("../common/templates/ecs/service.json.tpl")
 
   vars = {
-    service_name          = var.users_api_name
-    image                 = var.users_api_image
-    container_port        = var.users_api_port
-    host_port             = var.users_api_port
-    fargate_cpu           = var.fargate_cpu
-    fargate_memory        = var.fargate_memory
-    aws_region            = var.aws_region
-    aws_logs_group        = var.users_api_aws_logs_group
-    network_mode          = var.network_mode
-    service_enviroment    = jsonencode([
+    service_name   = var.users_api_name
+    image          = var.users_api_image
+    container_port = var.users_api_port
+    host_port      = var.users_api_port
+    fargate_cpu    = var.fargate_cpu
+    fargate_memory = var.fargate_memory
+    aws_region     = var.aws_region
+    aws_logs_group = var.users_api_aws_logs_group
+    network_mode   = var.network_mode
+    service_enviroment = jsonencode([
       {
-        "name": "RECOMMENDATIONS_SERVICE_URL",
-        "value": "http://${aws_service_discovery_service.recommendations_api_service_discovery.name}.${aws_service_discovery_private_dns_namespace.segment.name}:${var.recommendations_api_port}"
+        "name" : "RECOMMENDATIONS_SERVICE_URL",
+        "value" : "http://${aws_service_discovery_service.recommendations_api_service_discovery.name}.${aws_service_discovery_private_dns_namespace.segment.name}:${var.recommendations_api_port}"
       }
     ])
   }
@@ -181,7 +181,7 @@ resource "aws_ecs_service" "users_api" {
   }
 
   service_registries {
-    registry_arn     = aws_service_discovery_service.users_api_service_discovery.arn
+    registry_arn = aws_service_discovery_service.users_api_service_discovery.arn
   }
 
   depends_on = [aws_alb_listener.main, aws_iam_role_policy_attachment.ecs_task_execution_role]
@@ -193,16 +193,16 @@ resource "aws_ecs_service" "users_api" {
 data "template_file" "recommendations_api" {
   template = file("../common/templates/ecs/service.json.tpl")
   vars = {
-    service_name         = var.recommendations_api_name
-    image                = var.recommendations_api_image
-    container_port       = var.recommendations_api_port
-    host_port            = var.recommendations_api_port
-    fargate_cpu          = var.fargate_cpu
-    fargate_memory       = var.fargate_memory
-    aws_region           = var.aws_region
-    aws_logs_group       = var.recommendations_api_aws_logs_group
-    network_mode         = var.network_mode
-    service_enviroment   = jsonencode([])
+    service_name       = var.recommendations_api_name
+    image              = var.recommendations_api_image
+    container_port     = var.recommendations_api_port
+    host_port          = var.recommendations_api_port
+    fargate_cpu        = var.fargate_cpu
+    fargate_memory     = var.fargate_memory
+    aws_region         = var.aws_region
+    aws_logs_group     = var.recommendations_api_aws_logs_group
+    network_mode       = var.network_mode
+    service_enviroment = jsonencode([])
   }
 }
 
@@ -233,7 +233,7 @@ resource "aws_ecs_service" "recommendations_api" {
   }
 
   service_registries {
-    registry_arn     = aws_service_discovery_service.recommendations_api_service_discovery.arn
+    registry_arn = aws_service_discovery_service.recommendations_api_service_discovery.arn
   }
 
   depends_on = [aws_alb_listener.main, aws_iam_role_policy_attachment.ecs_task_execution_role]

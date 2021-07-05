@@ -19,7 +19,7 @@ variable "load_balancer_type" {
 }
 
 variable "subnet_ids" {
-  type        = list
+  type        = list(any)
   description = "List of subnets"
 }
 

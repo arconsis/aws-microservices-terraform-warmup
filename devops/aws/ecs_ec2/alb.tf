@@ -1,8 +1,8 @@
 resource "aws_alb" "main" {
-  name               = "main-ecs-lb"
-  internal           = false
-  subnets            = aws_subnet.public.*.id
-  security_groups    = [aws_security_group.lb.id]
+  name            = "main-ecs-lb"
+  internal        = false
+  subnets         = aws_subnet.public.*.id
+  security_groups = [aws_security_group.lb.id]
 }
 
 resource "aws_alb_listener" "http_listener" {
@@ -23,10 +23,10 @@ resource "aws_alb_listener" "http_listener" {
 # Books API Target Group
 ################################################################################
 resource "aws_alb_target_group" "books_api_tg" {
-  name        = "books-api-tg"
-  port        = 80 # (https://stackoverflow.com/questions/41772377/mapping-multiple-containers-to-an-application-load-balancer-in-terraform)
-  protocol    = "HTTP"
-  vpc_id      = aws_vpc.main.id
+  name     = "books-api-tg"
+  port     = 80 # (https://stackoverflow.com/questions/41772377/mapping-multiple-containers-to-an-application-load-balancer-in-terraform)
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.main.id
   # target_type = "instance"
   target_type = "ip"
 
@@ -61,10 +61,10 @@ resource "aws_alb_listener_rule" "books_api_listener_rule" {
 # Users API Target Group
 ################################################################################
 resource "aws_alb_target_group" "users_api_tg" {
-  name        = "users-api-tg"
-  port        = 80
-  protocol    = "HTTP"
-  vpc_id      = aws_vpc.main.id
+  name     = "users-api-tg"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.main.id
   # target_type = "instance"
   target_type = "ip"
 

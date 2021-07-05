@@ -6,7 +6,7 @@ resource "aws_ecs_cluster" "main" {
 resource "aws_ecs_capacity_provider" "capacity_provider" {
   count = var.create_capacity_provider ? 1 : 0
 
-  name  = var.capacity_provider_name
+  name = var.capacity_provider_name
   auto_scaling_group_provider {
     auto_scaling_group_arn         = var.aws_autoscaling_group_arn
     managed_termination_protection = "ENABLED"
@@ -14,8 +14,8 @@ resource "aws_ecs_capacity_provider" "capacity_provider" {
     managed_scaling {
       maximum_scaling_step_size = 4
       minimum_scaling_step_size = 1
-      status          = "ENABLED"
-      target_capacity = 85
+      status                    = "ENABLED"
+      target_capacity           = 85
     }
   }
 }

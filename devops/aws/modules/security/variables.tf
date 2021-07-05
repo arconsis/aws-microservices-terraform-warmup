@@ -20,7 +20,7 @@ variable "rule_egress_description" {
 
 variable "ingress_cidr_blocks" {
   description = "The region to use for this module."
-  default = []
+  default     = []
 }
 
 variable "ingress_from_port" {
@@ -42,7 +42,7 @@ variable "ingress_source_security_group_id" {
 
 variable "egress_cidr_blocks" {
   description = "The region to use for this module."
-  default = []
+  default     = []
 }
 
 variable "egress_from_port" {

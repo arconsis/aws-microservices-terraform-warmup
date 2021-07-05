@@ -23,7 +23,7 @@ resource "aws_vpc" "this" {
 # IG Definition
 ################################################################################
 resource "aws_internet_gateway" "this" {
-  count = var.create_vpc && var.create_igw && length(var.public_subnet_cidrs) > 0 ? 1 : 0
+  count  = var.create_vpc && var.create_igw && length(var.public_subnet_cidrs) > 0 ? 1 : 0
   vpc_id = local.vpc_id
   tags = {
     Name        = "${var.project}_${var.environment}_ig"
@@ -83,7 +83,7 @@ resource "aws_eip" "nat" {
 }
 
 resource "aws_nat_gateway" "this" {
-  count         = var.create_vpc && var.enable_nat_gateway ? local.nat_gateway_count : 0
+  count = var.create_vpc && var.enable_nat_gateway ? local.nat_gateway_count : 0
   subnet_id = element(
     aws_subnet.public.*.id,
     var.single_nat_gateway ? 0 : count.index,
@@ -92,7 +92,7 @@ resource "aws_nat_gateway" "this" {
     aws_eip.nat.*.id,
     var.single_nat_gateway ? 0 : count.index,
   )
-  depends_on    = [aws_internet_gateway.this]
+  depends_on = [aws_internet_gateway.this]
 }
 
 ################################################################################

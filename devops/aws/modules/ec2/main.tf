@@ -19,9 +19,9 @@ data "aws_ami" "amazon_linux" {
 }
 
 resource "aws_launch_configuration" "this" {
-  name          = var.launch_configuration_name
-  image_id      = data.aws_ami.amazon_linux.id
-  instance_type = "t2.micro"
+  name                        = var.launch_configuration_name
+  image_id                    = data.aws_ami.amazon_linux.id
+  instance_type               = "t2.micro"
   iam_instance_profile        = var.iam_ecs_service_role_name
   security_groups             = var.security_groups_ids
   associate_public_ip_address = var.assign_public_ip
@@ -42,7 +42,7 @@ resource "aws_autoscaling_group" "this" {
   min_size                  = 3
   max_size                  = 5
   force_delete              = true
-  load_balancers            = [] 
+  load_balancers            = []
   health_check_grace_period = 300
   vpc_zone_identifier       = var.subnet_ids
   protect_from_scale_in     = true

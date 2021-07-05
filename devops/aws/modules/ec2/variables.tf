@@ -10,7 +10,7 @@ variable "iam_ecs_service_role_name" {
 
 variable "security_groups_ids" {
   description = "IDs of security groups for ec2"
-  type        = list
+  type        = list(any)
 }
 
 variable "assign_public_ip" {
@@ -30,5 +30,5 @@ variable "aws_autoscaling_group_name" {
 
 variable "subnet_ids" {
   description = "List of subnets"
-    type        = list
+  type        = list(any)
 }

@@ -1,6 +1,6 @@
 resource "aws_iam_role" "ecs_instance_role" {
-  name = "ecs-instance-role-service"
-  path = "/"
+  name               = "ecs-instance-role-service"
+  path               = "/"
   assume_role_policy = file("../common/templates/policies/ecs_instance_role.json.tpl")
 }
 
@@ -22,7 +22,7 @@ resource "aws_iam_role" "vpc_flow_cloudwatch_logs_role" {
 }
 
 resource "aws_iam_role_policy" "vpc_flow_cloudwatch_logs_policy" {
-  name = "vpc-flow-cloudwatch-logs-policy"
-  role = aws_iam_role.vpc_flow_cloudwatch_logs_role.id
+  name   = "vpc-flow-cloudwatch-logs-policy"
+  role   = aws_iam_role.vpc_flow_cloudwatch_logs_role.id
   policy = file("../common/templates/policies/vpc_flow_cloudwatch_logs_policy.json.tpl")
 }
