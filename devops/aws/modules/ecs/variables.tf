@@ -6,8 +6,13 @@ variable "aws_region" {
 ################################################################################
 # Project metadata
 ################################################################################
-variable "aws_ecs_cluster_id" {
+variable "cluster_id" {
   description = "The ECS cluster ID where the service should run"
+  type        = string
+}
+
+variable "cluster_name" {
+  description = "The ECS cluster name where the service should run"
   type        = string
 }
 
@@ -134,5 +139,27 @@ variable "has_alb" {
 
 variable "alb_target_group" {
   description = "If the service is associated with an application load balancer this is the ALB target group"
+  type        = string
+}
+
+variable "enable_autoscaling" {
+  description = "Flag to define if we need auto scaling."
+  type        = bool
+}
+
+variable "autoscaling_settings" {
+  type = map(any)
+  # default = {
+  #   max_capacity       = 1
+  #   min_capacity       = 1
+  #   target_cpu_value   = 60
+  #   scale_in_cooldown  = 300
+  #   scale_out_cooldown = 300
+  # }
+  description = "Settings of Auto Scaling."
+}
+
+variable "autoscaling_name" {
+  description = "Name of autoscaling group."
   type        = string
 }

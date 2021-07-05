@@ -52,7 +52,7 @@ resource "aws_ecs_task_definition" "this" {
 
 resource "aws_ecs_service" "this" {
   name            = var.service_name
-  cluster         = var.aws_ecs_cluster_id
+  cluster         = var.cluster_id
   task_definition = aws_ecs_task_definition.this.arn
   desired_count   = var.service_desired_count
   launch_type     = var.launch_type
@@ -83,5 +83,56 @@ resource "aws_ecs_service" "this" {
   }
 
   depends_on = [var.alb_listener, var.iam_role_policy_ecs_task_execution_role]
-  # depends_on = [var.alb, var.iam_role_policy_ecs_task_execution_role]
+}
+
+## ECS Service Autoscaling
+resource "aws_appautoscaling_target" "this" {
+  count = var.enable_autoscaling == true ? 1 : 0
+
+  max_capacity       = lookup(var.autoscaling_settings, "max_capacity", 1)
+  min_capacity       = lookup(var.autoscaling_settings, "min_capacity", 1)
+  resource_id        = "service/${var.cluster_name}/${aws_ecs_service.this.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+
+resource "aws_appautoscaling_policy" "ecs_policy_cpu" {
+  count = var.enable_autoscaling == true && lookup(var.autoscaling_settings, "target_cpu_value", null) != null ? 1 : 0
+
+  name               = "${var.autoscaling_name}-scale-cpu"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.this.0.resource_id
+  scalable_dimension = aws_appautoscaling_target.this.0.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.this.0.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+    }
+
+    target_value       = lookup(var.autoscaling_settings, "target_cpu_value", 0)
+    scale_in_cooldown  = var.autoscaling_settings.scale_in_cooldown
+    scale_out_cooldown = var.autoscaling_settings.scale_out_cooldown
+  }
+}
+
+resource "aws_appautoscaling_policy" "ecs_policy_memory" {
+  count = var.enable_autoscaling == true && lookup(var.autoscaling_settings, "target_memory_value", null) != null ? 1 : 0
+
+  name               = "${var.autoscaling_name}-scale-memory"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.this.0.resource_id
+  scalable_dimension = aws_appautoscaling_target.this.0.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.this.0.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageMemoryUtilization"
+    }
+
+    target_value       = lookup(var.autoscaling_settings, "target_memory_value", 0)
+    scale_in_cooldown  = var.autoscaling_settings.scale_in_cooldown
+    scale_out_cooldown = var.autoscaling_settings.scale_out_cooldown
+  }
 }

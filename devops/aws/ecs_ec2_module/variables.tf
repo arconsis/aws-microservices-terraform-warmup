@@ -180,11 +180,11 @@ variable "books_api_network_mode" {
 }
 
 variable "books_api_task_compatibilities" {
-  default = ["FARGATE"]
+  default = ["EC2"]
 }
 
 variable "books_api_launch_type" {
-  default = "FARGATE"
+  default = "EC2"
 }
 
 ################################################################################
@@ -229,18 +229,6 @@ variable "users_api_health_check_path" {
   default = "/users/health-check"
 }
 
-variable "users_api_network_mode" {
-  default = "awsvpc"
-}
-
-variable "users_api_task_compatibilities" {
-  default = ["FARGATE"]
-}
-
-variable "users_api_launch_type" {
-  default = "FARGATE"
-}
-
 ################################################################################
 # API Recommendations Service Configuration
 ################################################################################
@@ -281,18 +269,6 @@ variable "recommendations_api_max_count" {
 
 variable "recommendations_api_health_check_path" {
   default = "/recommendations/health-check"
-}
-
-variable "recommendations_api_network_mode" {
-  default = "awsvpc"
-}
-
-variable "recommendations_api_task_compatibilities" {
-  default = ["FARGATE"]
-}
-
-variable "recommendations_api_launch_type" {
-  default = "FARGATE"
 }
 
 ################################################################################

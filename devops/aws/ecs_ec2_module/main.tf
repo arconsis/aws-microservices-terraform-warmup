@@ -18,67 +18,6 @@ module "networking" {
   private_subnet_cidrs = var.private_subnet_cidrs
 }
 
-################################################################################
-# ECS Tasks Execution IAM
-################################################################################
-# ECS task execution role data
-data "aws_iam_policy_document" "ecs_task_execution_role" {
-  version = "2012-10-17"
-  statement {
-    sid = ""
-    effect = "Allow"
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["ecs-tasks.amazonaws.com"]
-    }
-  }
-}
-
-# ECS task execution role
-resource "aws_iam_role" "ecs_task_execution_role" {
-  name               = var.ecs_task_execution_role_name
-  assume_role_policy = data.aws_iam_policy_document.ecs_task_execution_role.json
-}
-
-# ECS task execution role policy attachment
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_role" {
-  role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
-
-################################################################################
-# VPC Flow Logs IAM
-################################################################################
-resource "aws_iam_role" "vpc_flow_cloudwatch_logs_role" {
-  name               = "vpc-flow-cloudwatch-logs-role"
-  assume_role_policy = file("../common/templates/policies/vpc_flow_cloudwatch_logs_role.json.tpl")
-}
-
-resource "aws_iam_role_policy" "vpc_flow_cloudwatch_logs_policy" {
-  name = "vpc-flow-cloudwatch-logs-policy"
-  role = aws_iam_role.vpc_flow_cloudwatch_logs_role.id
-  policy = file("../common/templates/policies/vpc_flow_cloudwatch_logs_policy.json.tpl")
-}
-
-# VPC Flows
-################################################################################
-# Provides a VPC/Subnet/ENI Flow Log to capture IP traffic for a specific network interface, 
-# subnet, or VPC. Logs are sent to a CloudWatch Log Group or a S3 Bucket.
-# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/flow_log
-resource "aws_flow_log" "vpc_flow_logs" {
-  iam_role_arn    = aws_iam_role.vpc_flow_cloudwatch_logs_role.arn
-  log_destination = aws_cloudwatch_log_group.vpc_flow_logs.arn
-  traffic_type    = "ALL"
-  vpc_id          = module.networking.vpc_id
-}
-
-resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
-  name = "vpc-flow-logs"
-  retention_in_days = 30
-}
-
 module "alb_sg" {
   source                    = "../modules/security"
   create_vpc                = var.create_vpc
@@ -160,10 +99,35 @@ module "public_alb" {
   ]
 }
 
-module "ecs_cluster" {
-  source                   = "../modules/ecs_cluster"
-  project                  = var.project
-  create_capacity_provider = false
+module "ec2_launch_configuration" {
+  source                      = "../modules/ec2"
+  launch_configuration_name   = "ec2_ecs_launch_configuration"
+  iam_ecs_service_role_name   = aws_iam_instance_profile.ecs_service_role.name
+  security_groups_ids         = [module.ecs_tasks_sg.security_group_id]
+  subnet_ids                  = module.networking.private_subnet_ids
+  assign_public_ip            = false
+  project                     = var.project
+  aws_autoscaling_group_name  = "ec2-ecs-asg"
+}
+
+resource "aws_ecs_capacity_provider" "capacity_provider" {
+  name = "capacity-provider-ecs-ec2"
+  auto_scaling_group_provider {
+    auto_scaling_group_arn         = module.ec2_launch_configuration.aws_autoscaling_group_arn
+    managed_termination_protection = "ENABLED"
+
+    managed_scaling {
+      maximum_scaling_step_size = 4
+      minimum_scaling_step_size = 1
+      status          = "ENABLED"
+      target_capacity = 85
+    }
+  }
+}
+
+resource "aws_ecs_cluster" "main" {
+  name               = var.project
+  capacity_providers = [aws_ecs_capacity_provider.capacity_provider.name]
 }
 
 resource "aws_service_discovery_private_dns_namespace" "segment" {
@@ -209,11 +173,10 @@ resource "aws_alb_listener_rule" "books_api_listener_rule" {
   }
 }
 
-module "ecs_books_api_fargate" {
+module "ecs_books_api_ec2" {
   source                                  = "../modules/ecs"
   aws_region                              = var.aws_region
-  cluster_id                              = module.ecs_cluster.cluster_id
-  cluster_name                            = module.ecs_cluster.cluster_name
+  aws_ecs_cluster_id                      = aws_ecs_cluster.main.id
   has_discovery                           = true
   dns_namespace_id                        = aws_service_discovery_private_dns_namespace.segment.id
   service_security_groups_ids             = [module.ecs_tasks_sg.security_group_id]
@@ -239,25 +202,15 @@ module "ecs_books_api_fargate" {
   alb_listener                            = module.public_alb.alb_listener
   has_alb                                 = true
   alb_target_group                        = aws_alb_target_group.books_api_tg.id
-  enable_autoscaling                      = true
-  autoscaling_name                        = "${var.books_api_name}_scaling"
-  autoscaling_settings                    = {
-    max_capacity       = 4
-    min_capacity       = 2
-    target_cpu_value   = 60
-    scale_in_cooldown  = 60
-    scale_out_cooldown = 900
-  }
 }
 
 ################################################################################
 # RECOMMENDATION API ECS Service
 ################################################################################
-module "ecs_recommendations_api_fargate" {
+module "ecs_recommendations_api_ec2" {
   source                                  = "../modules/ecs"
   aws_region                              = var.aws_region
-  cluster_id                              = module.ecs_cluster.cluster_id
-  cluster_name                            = module.ecs_cluster.cluster_name
+  aws_ecs_cluster_id                      = aws_ecs_cluster.main.id
   has_discovery                           = true
   dns_namespace_id                        = aws_service_discovery_private_dns_namespace.segment.id
   service_security_groups_ids             = [module.private_ecs_tasks_sg.security_group_id]
@@ -266,32 +219,23 @@ module "ecs_recommendations_api_fargate" {
   iam_role_ecs_task_execution_role        = aws_iam_role.ecs_task_execution_role
   iam_role_policy_ecs_task_execution_role = aws_iam_role_policy_attachment.ecs_task_execution_role
   logs_retention_in_days                  = 30
-  fargate_cpu                             = var.fargate_cpu
-  fargate_memory                          = var.fargate_memory
-  health_check_grace_period_seconds       = var.health_check_grace_period_seconds
-  service_name                            = var.recommendations_api_name
-  service_image                           = var.recommendations_api_image
-  service_aws_logs_group                  = var.recommendations_api_aws_logs_group
-  service_port                            = var.recommendations_api_port
-  service_desired_count                   = var.recommendations_api_desired_count
-  service_max_count                       = var.recommendations_api_max_count
-  service_task_family                     = var.recommendations_api_task_family
+  fargate_cpu                             = "256"
+  fargate_memory                          = "512"
+  health_check_grace_period_seconds       = 180
+  service_name                            = "recommendations_api"
+  service_image                           = "eldimious/recommendations:latest"
+  service_aws_logs_group                  = "/ecs/recommendations_api"
+  service_port                            = 3333
+  service_desired_count                   = 2
+  service_max_count                       = 4
+  service_task_family                     = "recommendations_api_task"
   service_enviroment_variables            = []
-  network_mode                            = var.recommendations_api_network_mode
-  task_compatibilities                    = var.recommendations_api_task_compatibilities
-  launch_type                             = var.recommendations_api_launch_type
+  network_mode                            = "awsvpc"
+  task_compatibilities                    = ["EC2"]
+  launch_type                             = "EC2"
   alb_listener                            = module.public_alb.alb_listener
   has_alb                                 = false
   alb_target_group                        = null
-  enable_autoscaling                      = true
-  autoscaling_name                        = "${var.recommendations_api_name}_scaling"
-  autoscaling_settings                    = {
-    max_capacity       = 4
-    min_capacity       = 2
-    target_cpu_value   = 60
-    scale_in_cooldown  = 60
-    scale_out_cooldown = 900
-  }
 }
 
 ################################################################################
@@ -310,7 +254,7 @@ resource "aws_alb_target_group" "users_api_tg" {
     protocol            = "HTTP"
     matcher             = "200"
     timeout             = "3"
-    path                = var.users_api_health_check_path
+    path                = "/users/health-check"
     unhealthy_threshold = "2"
   }
 }
@@ -331,11 +275,10 @@ resource "aws_alb_listener_rule" "users_api_listener_rule" {
   }
 }
 
-module "ecs_users_api_fargate" {
+module "ecs_users_api_ec2" {
   source                                  = "../modules/ecs"
   aws_region                              = var.aws_region
-  cluster_id                              = module.ecs_cluster.cluster_id
-  cluster_name                            = module.ecs_cluster.cluster_name
+  aws_ecs_cluster_id                      = aws_ecs_cluster.main.id
   has_discovery                           = true
   dns_namespace_id                        = aws_service_discovery_private_dns_namespace.segment.id
   service_security_groups_ids             = [module.ecs_tasks_sg.security_group_id]
@@ -344,35 +287,26 @@ module "ecs_users_api_fargate" {
   iam_role_ecs_task_execution_role        = aws_iam_role.ecs_task_execution_role
   iam_role_policy_ecs_task_execution_role = aws_iam_role_policy_attachment.ecs_task_execution_role
   logs_retention_in_days                  = 30
-  fargate_cpu                             = var.fargate_cpu
-  fargate_memory                          = var.fargate_memory
-  health_check_grace_period_seconds       = var.health_check_grace_period_seconds
-  service_name                            = var.users_api_name
-  service_image                           = var.users_api_image
-  service_aws_logs_group                  = var.users_api_aws_logs_group
-  service_port                            = var.users_api_port
-  service_desired_count                   = var.users_api_desired_count
-  service_max_count                       = var.users_api_max_count
-  service_task_family                     = var.users_api_task_family
+  fargate_cpu                             = "256"
+  fargate_memory                          = "512"
+  health_check_grace_period_seconds       = 180
+  service_name                            = "users_api"
+  service_image                           = "eldimious/users:latest"
+  service_aws_logs_group                  = "/ecs/users_api"
+  service_port                            = 3000
+  service_desired_count                   = 2
+  service_max_count                       = 4
+  service_task_family                     = "users_api_task"
   service_enviroment_variables            = [
     {
       "name": "RECOMMENDATIONS_SERVICE_URL",
-      "value": "http://${module.ecs_recommendations_api_fargate.aws_service_discovery_service_name}.${aws_service_discovery_private_dns_namespace.segment.name}:${var.recommendations_api_port}"
+      "value": "http://${module.ecs_recommendations_api_ec2.aws_service_discovery_service_name}.${aws_service_discovery_private_dns_namespace.segment.name}:${var.recommendations_api_port}"
     }
   ]
-  network_mode                            = var.users_api_network_mode
-  task_compatibilities                    = var.users_api_task_compatibilities
-  launch_type                             = var.users_api_launch_type
+  network_mode                            = "awsvpc"
+  task_compatibilities                    = ["EC2"]
+  launch_type                             = "EC2"
   alb_listener                            = module.public_alb.alb_listener
   has_alb                                 = true
   alb_target_group                        = aws_alb_target_group.users_api_tg.id
-  enable_autoscaling                      = true
-  autoscaling_name                        = "${var.users_api_name}_scaling"
-  autoscaling_settings                    = {
-    max_capacity       = 4
-    min_capacity       = 2
-    target_cpu_value   = 60
-    scale_in_cooldown  = 60
-    scale_out_cooldown = 900
-  }
 }
