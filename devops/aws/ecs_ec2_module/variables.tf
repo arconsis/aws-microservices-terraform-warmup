@@ -3,7 +3,7 @@
 ################################################################################
 variable "aws_region" {
   description = "The AWS region things are created in"
-  default     = "us-west-2"
+  default     = "us-west-1"
 }
 //variable "docker_repo" {}
 
@@ -46,7 +46,7 @@ variable "cidr_block" {
 
 variable "availability_zones" {
   description = "List of availability zones you want. Example: eu-west-1a and eu-west-1b"
-  default     = ["us-west-2a", "us-west-2b"]
+  default     = ["us-west-1a", "us-west-1b"]
 }
 
 variable "public_subnet_cidrs" {
@@ -106,12 +106,12 @@ variable "az_count" {
 
 variable "fargate_cpu" {
   description = "Fargate instance CPU units to provision (1 vCPU = 1024 CPU units)"
-  default     = "256"
+  default     = "128"
 }
 
 variable "fargate_memory" {
   description = "Fargate instance memory to provision (in MiB)"
-  default     = "512"
+  default     = "256"
 }
 
 variable "health_check_grace_period_seconds" {
@@ -163,12 +163,12 @@ variable "books_api_port" {
 
 variable "books_api_desired_count" {
   description = "Number of books docker containers to run"
-  default     = 2
+  default     = 1
 }
 
 variable "books_api_max_count" {
   description = "Max number of books docker containers to run"
-  default     = 4
+  default     = 1
 }
 
 variable "books_api_health_check_path" {
@@ -217,12 +217,12 @@ variable "users_api_port" {
 
 variable "users_api_desired_count" {
   description = "Number of users docker containers to run"
-  default     = 2
+  default     = 1
 }
 
 variable "users_api_max_count" {
   description = "Max number of users docker containers to run"
-  default     = 4
+  default     = 1
 }
 
 variable "users_api_health_check_path" {
@@ -259,12 +259,12 @@ variable "recommendations_api_port" {
 
 variable "recommendations_api_desired_count" {
   description = "Number of recommendations docker containers to run"
-  default     = 2
+  default     = 1
 }
 
 variable "recommendations_api_max_count" {
   description = "Max number of recommendations docker containers to run"
-  default     = 4
+  default     = 1
 }
 
 variable "recommendations_api_health_check_path" {
