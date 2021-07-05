@@ -10,7 +10,7 @@ RUN npm install && \
 # Bundle app source
 COPY . /build
 
-FROM node:12-alpine
+FROM node:14-alpine
 # user with username node is provided from the official node image
 ENV user node
 # Run the image as a non-root user
