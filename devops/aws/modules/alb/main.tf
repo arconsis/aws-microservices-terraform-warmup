@@ -2,7 +2,7 @@
 # ALB Definition
 ################################################################################
 resource "aws_alb" "this" {
-  count              = var.create_alb ? 1 : 0
+  count = var.create_alb ? 1 : 0
 
   name               = var.alb_name
   load_balancer_type = var.load_balancer_type
@@ -15,7 +15,7 @@ resource "aws_alb" "this" {
 # ALB HTTP Listener Definition
 ################################################################################
 resource "aws_alb_listener" "http_tcp" {
-  count             = var.create_alb ? length(var.http_tcp_listeners) : 0
+  count = var.create_alb ? length(var.http_tcp_listeners) : 0
 
   load_balancer_arn = aws_alb.this[0].arn
   port              = var.http_tcp_listeners[count.index]["port"]
@@ -26,7 +26,7 @@ resource "aws_alb_listener" "http_tcp" {
 
     # Defaults to forward action if action_type not specified
     content {
-      type     = lookup(default_action.value, "action_type", "fixed-response")
+      type = lookup(default_action.value, "action_type", "fixed-response")
 
       dynamic "fixed_response" {
         for_each = length(keys(lookup(default_action.value, "fixed_response", {}))) == 0 ? [] : [lookup(default_action.value, "fixed_response", {})]

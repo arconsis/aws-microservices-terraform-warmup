@@ -20,7 +20,7 @@ variable "environment" {
 # vpc
 variable "create_vpc" {
   description = "Define if we have to create new VPC"
-  default = true
+  default     = true
 }
 
 variable "vpc_name" {
@@ -30,21 +30,21 @@ variable "vpc_name" {
 
 variable "create_igw" {
   description = "Define if we have to create IG"
-  default = true
+  default     = true
 }
 
 variable "single_nat_gateway" {
   description = "Define we need single NAT GW"
-  default = false
+  default     = false
 }
 
 variable "enable_nat_gateway" {
   description = "Define we need enable NAT GW"
-  default = true
+  default     = true
 }
 
 variable "cidr_block" {
-  default = "10.0.0.0/24"
+  default     = "10.0.0.0/24"
   description = "Network within which the Subnets will be created."
 }
 
@@ -60,16 +60,16 @@ variable "enable_dns_hostnames" {
 }
 
 variable "private_subnet_cidrs" {
-  type        = list
+  type        = list(any)
   description = "List of private cidrs, for every availability zone you want you need one. Example: 10.0.0.0/24 and 10.0.1.0/24"
 }
 
 variable "public_subnet_cidrs" {
-  type        = list
+  type        = list(any)
   description = "List of public cidrs, for every availability zone you want you need one. Example: 10.0.0.0/24 and 10.0.1.0/24"
 }
 
 variable "availability_zones" {
-  type        = list
+  type        = list(any)
   description = "List of availability zones you want. Example: eu-west-1a and eu-west-1b"
 }

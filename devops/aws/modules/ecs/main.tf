@@ -27,16 +27,16 @@ resource "aws_service_discovery_service" "this" {
 data "template_file" "this" {
   template = file("../common/templates/ecs/service.json.tpl")
   vars = {
-    service_name         = var.service_name
-    image                = var.service_image
-    container_port       = var.service_port
-    host_port            = var.service_port
-    fargate_cpu          = var.fargate_cpu
-    fargate_memory       = var.fargate_memory
-    aws_region           = var.aws_region
-    aws_logs_group       = var.service_aws_logs_group
-    network_mode         = var.network_mode
-    service_enviroment   = jsonencode(var.service_enviroment_variables)
+    service_name       = var.service_name
+    image              = var.service_image
+    container_port     = var.service_port
+    host_port          = var.service_port
+    fargate_cpu        = var.fargate_cpu
+    fargate_memory     = var.fargate_memory
+    aws_region         = var.aws_region
+    aws_logs_group     = var.service_aws_logs_group
+    network_mode       = var.network_mode
+    service_enviroment = jsonencode(var.service_enviroment_variables)
   }
 }
 

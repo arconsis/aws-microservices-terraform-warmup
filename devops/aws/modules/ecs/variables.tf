@@ -38,7 +38,7 @@ variable "discovery_routing_policy" {
 }
 
 variable "task_compatibilities" {
-  type = list
+  type        = list(any)
   description = "Defines ecs task compatibility"
 }
 

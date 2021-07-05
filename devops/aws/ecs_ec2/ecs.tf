@@ -1,5 +1,5 @@
 resource "aws_ecs_cluster" "main" {
-  name               = var.project
+  name = var.project
   # add / remove ec2 instances when we do not have the 
   # desired capacity to put all the tasks
   capacity_providers = [aws_ecs_capacity_provider.capacity_provider.name] # https://iam-j.github.io/ecs/capacity-provider-for-scaling/ + https://kerneltalks.com/cloud-services/amazon-ecs-capacity-providers-overview/
@@ -18,7 +18,7 @@ resource "aws_service_discovery_service" "books_api_service_discovery" {
     namespace_id = aws_service_discovery_private_dns_namespace.segment.id
 
     dns_records {
-      ttl  = var.discovery_ttl
+      ttl = var.discovery_ttl
       # type = "SRV"
       type = "A"
     }
@@ -34,7 +34,7 @@ resource "aws_service_discovery_service" "users_api_service_discovery" {
     namespace_id = aws_service_discovery_private_dns_namespace.segment.id
 
     dns_records {
-      ttl  = var.discovery_ttl
+      ttl = var.discovery_ttl
       # type = "SRV"
       type = "A"
     }
@@ -54,7 +54,7 @@ resource "aws_service_discovery_service" "recommendations_api_service_discovery"
     namespace_id = aws_service_discovery_private_dns_namespace.segment.id
 
     dns_records {
-      ttl  = var.discovery_ttl
+      ttl = var.discovery_ttl
       # type = "SRV"
       type = "A"
     }
@@ -72,8 +72,8 @@ resource "aws_ecs_capacity_provider" "capacity_provider" {
     managed_scaling {
       maximum_scaling_step_size = 4
       minimum_scaling_step_size = 1
-      status          = "ENABLED"
-      target_capacity = 85
+      status                    = "ENABLED"
+      target_capacity           = 85
     }
   }
 }
@@ -84,22 +84,22 @@ resource "aws_ecs_capacity_provider" "capacity_provider" {
 data "template_file" "books_api" {
   template = file("../common/templates/ecs/service.json.tpl")
   vars = {
-    service_name         = var.books_api_name
-    image                = var.books_api_image
-    container_port       = var.books_api_port
-    host_port            = var.books_api_port
-    fargate_cpu          = var.fargate_cpu
-    fargate_memory       = var.fargate_memory
-    aws_region           = var.aws_region
-    aws_logs_group       = var.books_api_aws_logs_group
-    network_mode         = var.network_mode
-    service_enviroment   = jsonencode([])
+    service_name       = var.books_api_name
+    image              = var.books_api_image
+    container_port     = var.books_api_port
+    host_port          = var.books_api_port
+    fargate_cpu        = var.fargate_cpu
+    fargate_memory     = var.fargate_memory
+    aws_region         = var.aws_region
+    aws_logs_group     = var.books_api_aws_logs_group
+    network_mode       = var.network_mode
+    service_enviroment = jsonencode([])
   }
 }
 
 resource "aws_ecs_task_definition" "books_api" {
-  family                   = var.books_api_task_family
-  container_definitions    = data.template_file.books_api.rendered
+  family                = var.books_api_task_family
+  container_definitions = data.template_file.books_api.rendered
   # network_mode             = "bridge"
   network_mode             = "awsvpc"
   requires_compatibilities = ["EC2"]
@@ -129,7 +129,7 @@ resource "aws_ecs_service" "service" {
   }
 
   service_registries {
-    registry_arn      = aws_service_discovery_service.books_api_service_discovery.arn
+    registry_arn = aws_service_discovery_service.books_api_service_discovery.arn
     # container_name    = var.books_api_name # we need it because of bridge network mode
     # container_port    = var.books_api_port # we need it because of bridge network mode
   }
@@ -137,7 +137,7 @@ resource "aws_ecs_service" "service" {
   # lifecycle {
   #   ignore_changes = [desired_count]
   # }
-  depends_on  = [aws_alb_listener.http_listener]
+  depends_on = [aws_alb_listener.http_listener]
 }
 
 ################################################################################
@@ -147,19 +147,19 @@ data "template_file" "users_api" {
   template = file("../common/templates/ecs/service.json.tpl")
 
   vars = {
-    service_name          = var.users_api_name
-    image                 = var.users_api_image
-    container_port        = var.users_api_port
-    host_port             = var.users_api_port
-    fargate_cpu           = var.fargate_cpu
-    fargate_memory        = var.fargate_memory
-    aws_region            = var.aws_region
-    aws_logs_group        = var.users_api_aws_logs_group
-    network_mode          = var.network_mode
-    service_enviroment    = jsonencode([
+    service_name   = var.users_api_name
+    image          = var.users_api_image
+    container_port = var.users_api_port
+    host_port      = var.users_api_port
+    fargate_cpu    = var.fargate_cpu
+    fargate_memory = var.fargate_memory
+    aws_region     = var.aws_region
+    aws_logs_group = var.users_api_aws_logs_group
+    network_mode   = var.network_mode
+    service_enviroment = jsonencode([
       {
-        "name": "RECOMMENDATIONS_SERVICE_URL",
-        "value": "http://${aws_service_discovery_service.recommendations_api_service_discovery.name}.${aws_service_discovery_private_dns_namespace.segment.name}:${var.recommendations_api_port}"
+        "name" : "RECOMMENDATIONS_SERVICE_URL",
+        "value" : "http://${aws_service_discovery_service.recommendations_api_service_discovery.name}.${aws_service_discovery_private_dns_namespace.segment.name}:${var.recommendations_api_port}"
       }
     ])
   }
@@ -199,7 +199,7 @@ resource "aws_ecs_service" "users_api" {
   }
 
   service_registries {
-    registry_arn      = aws_service_discovery_service.users_api_service_discovery.arn
+    registry_arn = aws_service_discovery_service.users_api_service_discovery.arn
     # container_name    = var.users_api_name # we need it because of bridge network mode
     # container_port    = var.users_api_port # we need it because of bridge network mode
   }
@@ -207,7 +207,7 @@ resource "aws_ecs_service" "users_api" {
   # lifecycle {
   #   ignore_changes = [desired_count]
   # }
-  depends_on  = [aws_alb_listener.http_listener]
+  depends_on = [aws_alb_listener.http_listener]
 }
 
 ################################################################################
@@ -217,16 +217,16 @@ data "template_file" "recommendations_api" {
   template = file("../common/templates/ecs/service.json.tpl")
 
   vars = {
-    service_name         = var.recommendations_api_name
-    image                = var.recommendations_api_image
-    container_port       = var.recommendations_api_port
-    host_port            = var.recommendations_api_port
-    fargate_cpu          = var.fargate_cpu
-    fargate_memory       = var.fargate_memory
-    aws_region           = var.aws_region
-    aws_logs_group       = var.recommendations_api_aws_logs_group
-    network_mode         = var.network_mode
-    service_enviroment   = jsonencode([])
+    service_name       = var.recommendations_api_name
+    image              = var.recommendations_api_image
+    container_port     = var.recommendations_api_port
+    host_port          = var.recommendations_api_port
+    fargate_cpu        = var.fargate_cpu
+    fargate_memory     = var.fargate_memory
+    aws_region         = var.aws_region
+    aws_logs_group     = var.recommendations_api_aws_logs_group
+    network_mode       = var.network_mode
+    service_enviroment = jsonencode([])
   }
 }
 
@@ -262,7 +262,7 @@ resource "aws_ecs_service" "recommendations_api" {
   # }
 
   service_registries {
-    registry_arn      = aws_service_discovery_service.recommendations_api_service_discovery.arn
+    registry_arn = aws_service_discovery_service.recommendations_api_service_discovery.arn
     # container_name    = var.recommendations_api_name # we need it because of bridge network mode
     # container_port    = var.recommendations_api_port # we need it because of bridge network mode
   }

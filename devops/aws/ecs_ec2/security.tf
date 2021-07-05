@@ -4,7 +4,7 @@
 resource "aws_security_group" "lb" {
   name        = "load-balancer-security-group"
   description = "controls access to the ALB"
-  vpc_id = aws_vpc.main.id
+  vpc_id      = aws_vpc.main.id
 
   # Accept incoming access to port 80 from anywhere
   ingress {
@@ -39,9 +39,9 @@ resource "aws_security_group" "ec2_sg" {
   }
 
   egress {
-    from_port   = 0 # Allowing any incoming port
-    to_port     = 0 # Allowing any outgoing port
-    protocol    = "-1" # Allowing any outgoing protocol 
+    from_port   = 0             # Allowing any incoming port
+    to_port     = 0             # Allowing any outgoing port
+    protocol    = "-1"          # Allowing any outgoing protocol 
     cidr_blocks = ["0.0.0.0/0"] # Allowing traffic out to all IP addresses
   }
 }
@@ -56,16 +56,16 @@ resource "aws_security_group" "private_ecs_ec2_tasks" {
 
   # Traffic to the ECS cluster should only come from the other ecs tasks in vpc
   ingress {
-    from_port = 0
-    to_port   = 0
-    protocol  = "-1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = [var.cidr_block]
   }
 
   egress {
-    from_port   = 0 # Allowing any incoming port
-    to_port     = 0 # Allowing any outgoing port
-    protocol    = "-1" # Allowing any outgoing protocol
+    from_port   = 0             # Allowing any incoming port
+    to_port     = 0             # Allowing any outgoing port
+    protocol    = "-1"          # Allowing any outgoing protocol
     cidr_blocks = ["0.0.0.0/0"] # Allowing traffic out to all IP addresses
   }
 }

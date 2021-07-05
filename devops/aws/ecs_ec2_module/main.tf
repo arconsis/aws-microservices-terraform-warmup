@@ -28,8 +28,8 @@ resource "aws_iam_role" "vpc_flow_cloudwatch_logs_role" {
 }
 
 resource "aws_iam_role_policy" "vpc_flow_cloudwatch_logs_policy" {
-  name = "vpc-flow-cloudwatch-logs-policy"
-  role = aws_iam_role.vpc_flow_cloudwatch_logs_role.id
+  name   = "vpc-flow-cloudwatch-logs-policy"
+  role   = aws_iam_role.vpc_flow_cloudwatch_logs_role.id
   policy = file("../common/templates/policies/vpc_flow_cloudwatch_logs_policy.json.tpl")
 }
 
@@ -37,8 +37,8 @@ resource "aws_iam_role_policy" "vpc_flow_cloudwatch_logs_policy" {
 # ECS
 ################################################################################
 resource "aws_iam_role" "ecs_instance_role" {
-  name = "ecs-instance-role-service"
-  path = "/"
+  name               = "ecs-instance-role-service"
+  path               = "/"
   assume_role_policy = file("../common/templates/policies/ecs_instance_role.json.tpl")
 }
 
@@ -52,7 +52,7 @@ resource "aws_iam_instance_profile" "ecs_service_role" {
 }
 
 module "networking" {
-	source               = "../modules/network"
+  source               = "../modules/network"
   create_vpc           = var.create_vpc
   create_igw           = var.create_igw
   single_nat_gateway   = var.single_nat_gateway
@@ -66,65 +66,65 @@ module "networking" {
 }
 
 module "alb_sg" {
-  source                    = "../modules/security"
-  create_vpc                = var.create_vpc
-  create_sg                 = true
-  sg_name                   = "load-balancer-security-group"
-  description               = "controls access to the ALB"
-  rule_ingress_description  = "controls access to the ALB"
-  rule_egress_description   = "allow all outbound"
-  vpc_id                    = module.networking.vpc_id
-  ingress_cidr_blocks       = ["0.0.0.0/0"]
-  ingress_from_port         = 80
-  ingress_to_port           = 80
-  ingress_protocol          = "tcp"
-  egress_cidr_blocks        = ["0.0.0.0/0"]
-  egress_from_port          = 0
-  egress_to_port            = 0
-  egress_protocol           = "-1"
+  source                   = "../modules/security"
+  create_vpc               = var.create_vpc
+  create_sg                = true
+  sg_name                  = "load-balancer-security-group"
+  description              = "controls access to the ALB"
+  rule_ingress_description = "controls access to the ALB"
+  rule_egress_description  = "allow all outbound"
+  vpc_id                   = module.networking.vpc_id
+  ingress_cidr_blocks      = ["0.0.0.0/0"]
+  ingress_from_port        = 80
+  ingress_to_port          = 80
+  ingress_protocol         = "tcp"
+  egress_cidr_blocks       = ["0.0.0.0/0"]
+  egress_from_port         = 0
+  egress_to_port           = 0
+  egress_protocol          = "-1"
 }
 
 module "ecs_tasks_sg" {
-  source                            = "../modules/security"
-  create_vpc                        = var.create_vpc
-  create_sg                         = true
-  sg_name                           = "ecs-tasks-security-group"
-  description                       = "controls access to the ECS tasks"
-  rule_ingress_description          = "allow inbound access from the ALB only"
-  rule_egress_description           = "allow all outbound"
-  vpc_id                            = module.networking.vpc_id
-  ingress_cidr_blocks               = null
-  ingress_from_port                 = 0
-  ingress_to_port                   = 0
-  ingress_protocol                  = "-1"
-  ingress_source_security_group_id  = module.alb_sg.security_group_id
-  egress_cidr_blocks                = ["0.0.0.0/0"]
-  egress_from_port                  = 0
-  egress_to_port                    = 0
-  egress_protocol                   = "-1"
+  source                           = "../modules/security"
+  create_vpc                       = var.create_vpc
+  create_sg                        = true
+  sg_name                          = "ecs-tasks-security-group"
+  description                      = "controls access to the ECS tasks"
+  rule_ingress_description         = "allow inbound access from the ALB only"
+  rule_egress_description          = "allow all outbound"
+  vpc_id                           = module.networking.vpc_id
+  ingress_cidr_blocks              = null
+  ingress_from_port                = 0
+  ingress_to_port                  = 0
+  ingress_protocol                 = "-1"
+  ingress_source_security_group_id = module.alb_sg.security_group_id
+  egress_cidr_blocks               = ["0.0.0.0/0"]
+  egress_from_port                 = 0
+  egress_to_port                   = 0
+  egress_protocol                  = "-1"
 }
 
 module "private_ecs_tasks_sg" {
-  source                            = "../modules/security"
-  create_vpc                        = var.create_vpc
-  create_sg                         = true
-  sg_name                           = "ecs-private-tasks-security-group"
-  description                       = "controls access to the private ECS tasks (not internet facing)"
-  rule_ingress_description          = "allow inbound access only from resources in VPC"
-  rule_egress_description           = "allow all outbound"
-  vpc_id                            = module.networking.vpc_id
-  ingress_cidr_blocks               = [var.cidr_block]
-  ingress_from_port                 = 0
-  ingress_to_port                   = 0
-  ingress_protocol                  = "-1"
-  egress_cidr_blocks                = ["0.0.0.0/0"]
-  egress_from_port                  = 0
-  egress_to_port                    = 0
-  egress_protocol                   = "-1"
+  source                   = "../modules/security"
+  create_vpc               = var.create_vpc
+  create_sg                = true
+  sg_name                  = "ecs-private-tasks-security-group"
+  description              = "controls access to the private ECS tasks (not internet facing)"
+  rule_ingress_description = "allow inbound access only from resources in VPC"
+  rule_egress_description  = "allow all outbound"
+  vpc_id                   = module.networking.vpc_id
+  ingress_cidr_blocks      = [var.cidr_block]
+  ingress_from_port        = 0
+  ingress_to_port          = 0
+  ingress_protocol         = "-1"
+  egress_cidr_blocks       = ["0.0.0.0/0"]
+  egress_from_port         = 0
+  egress_to_port           = 0
+  egress_protocol          = "-1"
 }
 
 module "public_alb" {
-	source             = "../modules/alb"
+  source             = "../modules/alb"
   create_alb         = var.create_alb
   load_balancer_type = "application"
   alb_name           = "main-ecs-lb"
@@ -134,9 +134,9 @@ module "public_alb" {
   subnet_ids         = module.networking.public_subnet_ids
   http_tcp_listeners = [
     {
-      port           = 80
-      protocol       = "HTTP"
-      action_type    = "fixed-response"
+      port        = 80
+      protocol    = "HTTP"
+      action_type = "fixed-response"
       fixed_response = {
         content_type = "text/plain"
         message_body = "Resource not found"
@@ -153,8 +153,8 @@ module "public_alb" {
 data "aws_iam_policy_document" "ecs_task_execution_role" {
   version = "2012-10-17"
   statement {
-    sid = ""
-    effect = "Allow"
+    sid     = ""
+    effect  = "Allow"
     actions = ["sts:AssumeRole"]
 
     principals {
@@ -165,14 +165,14 @@ data "aws_iam_policy_document" "ecs_task_execution_role" {
 }
 
 module "ec2_launch_configuration" {
-  source                      = "../modules/ec2"
-  launch_configuration_name   = "ec2_ecs_launch_configuration"
-  iam_ecs_service_role_name   = aws_iam_instance_profile.ecs_service_role.name
-  security_groups_ids         = [module.ecs_tasks_sg.security_group_id]
-  subnet_ids                  = module.networking.private_subnet_ids
-  assign_public_ip            = false
-  project                     = var.project
-  aws_autoscaling_group_name  = "ec2-ecs-asg"
+  source                     = "../modules/ec2"
+  launch_configuration_name  = "ec2_ecs_launch_configuration"
+  iam_ecs_service_role_name  = aws_iam_instance_profile.ecs_service_role.name
+  security_groups_ids        = [module.ecs_tasks_sg.security_group_id]
+  subnet_ids                 = module.networking.private_subnet_ids
+  assign_public_ip           = false
+  project                    = var.project
+  aws_autoscaling_group_name = "ec2-ecs-asg"
 }
 
 module "ecs_cluster" {
@@ -359,19 +359,19 @@ module "ecs_users_api_ec2" {
   service_desired_count                   = var.users_api_desired_count
   service_max_count                       = var.users_api_max_count
   service_task_family                     = var.users_api_task_family
-  service_enviroment_variables            = [
+  service_enviroment_variables = [
     {
-      "name": "RECOMMENDATIONS_SERVICE_URL",
-      "value": "http://${module.ecs_recommendations_api_ec2.aws_service_discovery_service_name}.${aws_service_discovery_private_dns_namespace.segment.name}:${var.recommendations_api_port}"
+      "name" : "RECOMMENDATIONS_SERVICE_URL",
+      "value" : "http://${module.ecs_recommendations_api_ec2.aws_service_discovery_service_name}.${aws_service_discovery_private_dns_namespace.segment.name}:${var.recommendations_api_port}"
     }
   ]
-  network_mode                            = "awsvpc"
-  task_compatibilities                    = ["EC2"]
-  launch_type                             = "EC2"
-  alb_listener                            = module.public_alb.alb_listener
-  has_alb                                 = true
-  alb_target_group                        = aws_alb_target_group.users_api_tg.id
-  enable_autoscaling                      = false
-  autoscaling_name                        = null
-  autoscaling_settings                    = {}
+  network_mode         = "awsvpc"
+  task_compatibilities = ["EC2"]
+  launch_type          = "EC2"
+  alb_listener         = module.public_alb.alb_listener
+  has_alb              = true
+  alb_target_group     = aws_alb_target_group.users_api_tg.id
+  enable_autoscaling   = false
+  autoscaling_name     = null
+  autoscaling_settings = {}
 }
