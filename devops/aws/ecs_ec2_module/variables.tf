@@ -3,7 +3,7 @@
 ################################################################################
 variable "aws_region" {
   description = "The AWS region things are created in"
-  default     = "us-west-1"
+  default     = "eu-west-1"
 }
 //variable "docker_repo" {}
 
@@ -46,7 +46,7 @@ variable "cidr_block" {
 
 variable "availability_zones" {
   description = "List of availability zones you want. Example: eu-west-1a and eu-west-1b"
-  default     = ["us-west-1a", "us-west-1b"]
+  default     = ["eu-west-1a", "eu-west-1b"]
 }
 
 variable "public_subnet_cidrs" {
