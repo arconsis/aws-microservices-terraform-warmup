@@ -6,8 +6,8 @@
 data "aws_iam_policy_document" "ecs_task_execution_role" {
   version = "2012-10-17"
   statement {
-    sid = ""
-    effect = "Allow"
+    sid     = ""
+    effect  = "Allow"
     actions = ["sts:AssumeRole"]
 
     principals {
@@ -38,7 +38,7 @@ resource "aws_iam_role" "vpc_flow_cloudwatch_logs_role" {
 }
 
 resource "aws_iam_role_policy" "vpc_flow_cloudwatch_logs_policy" {
-  name = "vpc-flow-cloudwatch-logs-policy"
-  role = aws_iam_role.vpc_flow_cloudwatch_logs_role.id
+  name   = "vpc-flow-cloudwatch-logs-policy"
+  role   = aws_iam_role.vpc_flow_cloudwatch_logs_role.id
   policy = file("../common/templates/policies/vpc_flow_cloudwatch_logs_policy.json.tpl")
 }
