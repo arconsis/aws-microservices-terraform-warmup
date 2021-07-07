@@ -163,3 +163,9 @@ variable "autoscaling_name" {
   description = "Name of autoscaling group."
   type        = string
 }
+
+variable "has_ordered_placement" {
+  description = "Flag to define if ordered placement strategy should be set."
+  type        = bool
+  default     = false
+}

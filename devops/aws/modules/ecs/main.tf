@@ -82,9 +82,12 @@ resource "aws_ecs_service" "this" {
     }
   }
 
-  ordered_placement_strategy {
-    type  = "binpack"
-    field = "memory"
+  dynamic "ordered_placement_strategy" {
+    for_each = var.has_ordered_placement ? [1] : []
+    content {
+      type  = "binpack"
+      field = "memory"
+    }
   }
 
   depends_on = [var.alb_listener, var.iam_role_policy_ecs_task_execution_role]

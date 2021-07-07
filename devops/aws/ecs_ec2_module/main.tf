@@ -259,6 +259,7 @@ module "ecs_books_api_ec2" {
   enable_autoscaling                      = false
   autoscaling_name                        = null
   autoscaling_settings                    = {}
+  has_ordered_placement                   = true
 }
 
 ################################################################################
@@ -297,6 +298,7 @@ module "ecs_recommendations_api_ec2" {
   enable_autoscaling                      = false
   autoscaling_name                        = null
   autoscaling_settings                    = {}
+  has_ordered_placement                   = true
 }
 
 ################################################################################
@@ -365,13 +367,14 @@ module "ecs_users_api_ec2" {
       "value" : "http://${module.ecs_recommendations_api_ec2.aws_service_discovery_service_name}.${aws_service_discovery_private_dns_namespace.segment.name}:${var.recommendations_api_port}"
     }
   ]
-  network_mode         = "awsvpc"
-  task_compatibilities = ["EC2"]
-  launch_type          = "EC2"
-  alb_listener         = module.public_alb.alb_listener
-  has_alb              = true
-  alb_target_group     = aws_alb_target_group.users_api_tg.id
-  enable_autoscaling   = false
-  autoscaling_name     = null
-  autoscaling_settings = {}
+  network_mode          = "awsvpc"
+  task_compatibilities  = ["EC2"]
+  launch_type           = "EC2"
+  alb_listener          = module.public_alb.alb_listener
+  has_alb               = true
+  alb_target_group      = aws_alb_target_group.users_api_tg.id
+  enable_autoscaling    = false
+  autoscaling_name      = null
+  autoscaling_settings  = {}
+  has_ordered_placement = true
 }
