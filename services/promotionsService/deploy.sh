@@ -1,2 +1,2 @@
-docker build . -t eldimious/recommendations:latest
-docker push eldimious/recommendations:latest
+docker build . -t eldimious/promotions:latest
+docker push eldimious/promotions:latest

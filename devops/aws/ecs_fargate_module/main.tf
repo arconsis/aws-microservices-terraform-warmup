@@ -273,7 +273,7 @@ resource "aws_alb_target_group" "promotions_api_tg" {
 
 resource "aws_alb_listener_rule" "promotions_api_listener_rule" {
   listener_arn = module.public_alb.alb_listener_http_tcp_arn
-  priority     = 1
+  priority     = 3
 
   action {
     type             = "forward" # Redirect all traffic from the ALB to the target group
@@ -282,7 +282,7 @@ resource "aws_alb_listener_rule" "promotions_api_listener_rule" {
 
   condition {
     path_pattern {
-      values = var.promotions_api_tg
+      values = var.promotions_api_tg_paths
     }
   }
 }
@@ -376,7 +376,7 @@ module "ecs_recommendations_api_fargate" {
 # USERS API ECS Service
 ################################################################################
 resource "aws_alb_target_group" "users_api_tg" {
-  name        = "users-api-tg"
+  name        = var.users_api_tg
   port        = 80
   protocol    = "HTTP"
   vpc_id      = module.networking.vpc_id
@@ -404,7 +404,7 @@ resource "aws_alb_listener_rule" "users_api_listener_rule" {
 
   condition {
     path_pattern {
-      values = ["/users", "/users/*"]
+      values = var.users_api_tg_paths
     }
   }
 }

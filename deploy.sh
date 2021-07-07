@@ -25,8 +25,10 @@ cd ../promotionsService &&
 # Deploy to cloud host (default AWS)
 if [ $lauch_type = "fargate" ]; then
   cd ../../devops/aws/ecs_fargate_module &&
+  terraform init
   terraform apply
 else
   cd ../../devops/aws/ecs_ec2_module &&
+  terraform init
   terraform apply
 fi
