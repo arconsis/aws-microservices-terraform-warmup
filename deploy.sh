@@ -1,4 +1,4 @@
-echo -n "Please enter a lauch type of ECS (ec2 OR fargate OR fargate_modules OR ec2_modules): "
+echo -n "Please enter a lauch type of ECS (ec2 OR fargate): "
 read lauch_type
 
 if [ $lauch_type != "ec2" ] && [ $lauch_type != "fargate" ]; then
