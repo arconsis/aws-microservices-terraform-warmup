@@ -242,6 +242,60 @@ variable "users_api_launch_type" {
 }
 
 ################################################################################
+# API Promotions Service Configuration
+################################################################################
+variable "promotions_api_name" {
+  description = "Defines service name"
+  default     = "promotions_api"
+}
+
+variable "promotions_api_image" {
+  description = "Defines service image"
+  default     = "eldimious/promotions:latest"
+}
+
+variable "promotions_api_aws_logs_group" {
+  description = "Defines logs group"
+  default     = "/ecs/promotions_api"
+}
+
+variable "promotions_api_task_family" {
+  description = "Defines logs group"
+  default     = "promotions_api_task"
+}
+
+variable "promotions_api_port" {
+  description = "Port exposed by the users image"
+  default     = 8080
+}
+
+variable "promotions_api_desired_count" {
+  description = "Number of users docker containers to run"
+  default     = 2
+}
+
+variable "promotions_api_max_count" {
+  description = "Max number of users docker containers to run"
+  default     = 4
+}
+
+variable "promotions_api_health_check_path" {
+  default = "/promotions/"
+}
+
+variable "promotions_api_network_mode" {
+  default = "awsvpc"
+}
+
+variable "promotions_api_task_compatibilities" {
+  default = ["FARGATE"]
+}
+
+variable "promotions_api_launch_type" {
+  default = "FARGATE"
+}
+
+################################################################################
 # API Recommendations Service Configuration
 ################################################################################
 variable "recommendations_api_name" {
