@@ -66,7 +66,7 @@ resource "aws_ecs_service" "this" {
   }
 
   dynamic "load_balancer" {
-    for_each = var.has_alb == false ? [] : [var.has_alb]
+    for_each = var.has_alb == false ? [] : [1]
     content {
       target_group_arn = var.alb_target_group
       container_name   = var.service_name
@@ -75,7 +75,7 @@ resource "aws_ecs_service" "this" {
   }
 
   dynamic "service_registries" {
-    for_each = var.has_discovery == false ? [] : [var.has_discovery]
+    for_each = var.has_discovery == false ? [] : [1]
     content {
       registry_arn   = aws_service_discovery_service.this[0].arn
       container_name = var.service_name
@@ -83,7 +83,7 @@ resource "aws_ecs_service" "this" {
   }
 
   dynamic "ordered_placement_strategy" {
-    for_each = var.has_ordered_placement ? [1] : []
+    for_each = var.has_ordered_placement == false ? [] : [1]
     content {
       type  = "binpack"
       field = "memory"
