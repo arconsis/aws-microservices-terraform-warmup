@@ -68,7 +68,7 @@ resource "aws_ecs_service" "this" {
   dynamic "load_balancer" {
     for_each = var.has_alb == false ? [] : [1]
     content {
-      target_group_arn = var.alb_target_group
+      target_group_arn = aws_alb_target_group.this[0].arn
       container_name   = var.service_name
       container_port   = var.service_port
     }
@@ -91,6 +91,46 @@ resource "aws_ecs_service" "this" {
   }
 
   depends_on = [var.alb_listener, var.iam_role_policy_ecs_task_execution_role]
+}
+
+resource "aws_alb_target_group" "this" {
+  count = var.has_alb == true ? 1 : 0
+
+  name        = var.alb_listener_tg
+  port        = var.alb_listener_port
+  protocol    = var.alb_listener_protocol
+  vpc_id      = var.vpc_id
+  target_type = var.alb_listener_target_type
+
+  health_check {
+    healthy_threshold   = "3"
+    interval            = "30"
+    protocol            = "HTTP"
+    matcher             = "200"
+    timeout             = "3"
+    path                = var.service_health_check_path
+    unhealthy_threshold = "2"
+  }
+
+  depends_on = [var.alb_listener]
+}
+
+resource "aws_alb_listener_rule" "this" {
+  count = var.has_alb == true ? 1 : 0
+
+  listener_arn = var.alb_listener_arn
+  priority     = var.alb_listener_rule_priority
+
+  action {
+    type             = var.alb_listener_rule_type # Redirect all traffic from the ALB to the target group
+    target_group_arn = aws_alb_target_group.this[0].arn
+  }
+
+  condition {
+    path_pattern {
+      values = var.alb_service_tg_paths
+    }
+  }
 }
 
 ## ECS Service Autoscaling

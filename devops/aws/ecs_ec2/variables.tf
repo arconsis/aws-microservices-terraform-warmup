@@ -190,6 +190,15 @@ variable "books_api_launch_type" {
 ################################################################################
 # API Users Service Configuration
 ################################################################################
+variable "users_api_tg" {
+  description = "Defines service tg"
+  default     = "users-api-tg"
+}
+
+variable "users_api_tg_paths" {
+  default = ["/users", "/users/*"]
+}
+
 variable "users_api_name" {
   description = "Defines service name"
   default     = "users_api"

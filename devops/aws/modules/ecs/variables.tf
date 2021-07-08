@@ -3,6 +3,11 @@ variable "aws_region" {
   description = "The region to use for this module."
 }
 
+variable "vpc_id" {
+  description = "The VPC id"
+  type        = string
+}
+
 ################################################################################
 # Project metadata
 ################################################################################
@@ -99,6 +104,11 @@ variable "service_enviroment_variables" {
   description = "Defines service enviroment variables"
 }
 
+variable "service_health_check_path" {
+  description = "Path for health check"
+  type        = string
+}
+
 variable "network_mode" {
   description = "Defines ecs task network mode"
 }
@@ -137,9 +147,43 @@ variable "has_alb" {
   type        = bool
 }
 
-variable "alb_target_group" {
-  description = "If the service is associated with an application load balancer this is the ALB target group"
+variable "alb_listener_tg" {
+  description = "Name of ALB listener target group"
   type        = string
+}
+
+variable "alb_listener_port" {
+  description = "Port of ALB listener target group"
+  type        = string
+}
+
+variable "alb_listener_protocol" {
+  description = "Protocol of ALB listener target group"
+  type        = string
+}
+
+variable "alb_listener_target_type" {
+  description = "Protocol of ALB listener target group"
+  type        = string
+}
+
+variable "alb_listener_arn" {
+  description = "ARN of ALB listener"
+  type        = string
+}
+
+variable "alb_listener_rule_priority" {
+  description = "Priority number of ALB listener rule"
+}
+
+variable "alb_listener_rule_type" {
+  description = "Type of ALB listener rule"
+  type        = string
+}
+
+variable "alb_service_tg_paths" {
+  description = "Paths which are used from ALB listener rule to route the request"
+  type        = list(string)
 }
 
 variable "enable_autoscaling" {
