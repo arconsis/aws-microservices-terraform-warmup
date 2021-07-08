@@ -3,60 +3,16 @@
 ################################################################################
 variable "aws_region" {
   description = "The AWS region things are created in"
-  default     = "eu-west-1"
+  default     = "us-west-1"
 }
 //variable "docker_repo" {}
 
 ################################################################################
 # Network Configuration
 ################################################################################
-variable "vpc_name" {
-  description = "The name of the VPC. Other names will result from this."
-  default     = "ms-vpc"
-}
-
-variable "create_vpc" {
-  description = "Flag to define if we have to create vpc"
-  type        = bool
-  default     = true
-}
-
-variable "create_igw" {
-  description = "Flag to define if we have to create IG"
-  type        = bool
-  default     = true
-}
-
-variable "single_nat_gateway" {
-  description = "Flag to define if we need only one NAT GW"
-  type        = bool
-  default     = false
-}
-
-variable "enable_nat_gateway" {
-  description = "Flag to define enable NAT GW"
-  type        = bool
-  default     = true
-}
-
 variable "cidr_block" {
   description = "Network IP range"
-  default     = "192.168.0.0/16"
-}
-
-variable "availability_zones" {
-  description = "List of availability zones you want. Example: eu-west-1a and eu-west-1b"
-  default     = ["eu-west-1a", "eu-west-1b"]
-}
-
-variable "public_subnet_cidrs" {
-  description = "List of public cidrs, for every availability zone you want you need one. Example: 10.0.0.0/24 and 10.0.1.0/24"
-  default     = ["192.168.0.0/19", "192.168.32.0/19"]
-}
-
-variable "private_subnet_cidrs" {
-  description = "List of private cidrs, for every availability zone you want you need one. Example: 10.0.0.0/24 and 10.0.1.0/24"
-  default     = ["192.168.128.0/19", "192.168.160.0/19"]
+  default     = "172.17.0.0/16"
 }
 
 variable "enable_dns_support" {
@@ -66,15 +22,6 @@ variable "enable_dns_support" {
 
 variable "enable_dns_hostnames" {
   description = "DNS hostnames"
-  default     = true
-}
-
-################################################################################
-# ALB
-################################################################################
-variable "create_alb" {
-  description = "Flag to define if we have to create ALB"
-  type        = bool
   default     = true
 }
 
@@ -106,12 +53,12 @@ variable "az_count" {
 
 variable "fargate_cpu" {
   description = "Fargate instance CPU units to provision (1 vCPU = 1024 CPU units)"
-  default     = "128"
+  default     = "256"
 }
 
 variable "fargate_memory" {
   description = "Fargate instance memory to provision (in MiB)"
-  default     = "256"
+  default     = "512"
 }
 
 variable "health_check_grace_period_seconds" {
@@ -127,15 +74,6 @@ variable "network_mode" {
 ################################################################################
 # API Books Service Configuration
 ################################################################################
-variable "books_api_tg" {
-  description = "Defines service tg"
-  default     = "books-api-tg"
-}
-
-variable "books_api_tg_paths" {
-  default = ["/books", "/books/*"]
-}
-
 variable "books_api_name" {
   description = "Defines service name"
   default     = "books_api"
@@ -168,23 +106,11 @@ variable "books_api_desired_count" {
 
 variable "books_api_max_count" {
   description = "Max number of books docker containers to run"
-  default     = 1
+  default     = 4
 }
 
 variable "books_api_health_check_path" {
   default = "/books/health-check"
-}
-
-variable "books_api_network_mode" {
-  default = "awsvpc"
-}
-
-variable "books_api_task_compatibilities" {
-  default = ["EC2"]
-}
-
-variable "books_api_launch_type" {
-  default = "EC2"
 }
 
 ################################################################################
@@ -222,7 +148,7 @@ variable "users_api_desired_count" {
 
 variable "users_api_max_count" {
   description = "Max number of users docker containers to run"
-  default     = 1
+  default     = 4
 }
 
 variable "users_api_health_check_path" {
@@ -264,7 +190,7 @@ variable "recommendations_api_desired_count" {
 
 variable "recommendations_api_max_count" {
   description = "Max number of recommendations docker containers to run"
-  default     = 1
+  default     = 4
 }
 
 variable "recommendations_api_health_check_path" {

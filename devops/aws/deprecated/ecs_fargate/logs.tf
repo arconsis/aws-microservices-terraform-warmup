@@ -12,7 +12,7 @@ resource "aws_flow_log" "vpc_flow_logs" {
 }
 
 resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
-  name = "vpc-flow-logs"
+  name              = "vpc-flow-logs"
   retention_in_days = 30
 }
 

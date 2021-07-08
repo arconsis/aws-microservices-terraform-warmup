@@ -40,34 +40,3 @@ resource "aws_alb_listener" "http_tcp" {
     }
   }
 }
-
-# resource "aws_alb_target_group" "main" {
-#   count = var.create_alb ? length(var.target_groups) : 0
-
-#   name            = lookup(var.target_groups[count.index], "name", null)
-
-#   vpc_id           = var.vpc_id
-#   port             = lookup(var.target_groups[count.index], "backend_port", null)
-#   protocol         = lookup(var.target_groups[count.index], "backend_protocol", null) != null ? upper(lookup(var.target_groups[count.index], "backend_protocol")) : null
-#   target_type      = lookup(var.target_groups[count.index], "target_type", null)
-
-
-#   dynamic "health_check" {
-#     for_each = length(keys(lookup(var.target_groups[count.index], "health_check", {}))) == 0 ? [] : [lookup(var.target_groups[count.index], "health_check", {})]
-#     content {
-#       interval            = lookup(health_check.value, "interval", null)
-#       path                = lookup(health_check.value, "path", null)
-#       healthy_threshold   = lookup(health_check.value, "healthy_threshold", null)
-#       unhealthy_threshold = lookup(health_check.value, "unhealthy_threshold", null)
-#       timeout             = lookup(health_check.value, "timeout", null)
-#       protocol            = lookup(health_check.value, "protocol", null)
-#       matcher             = lookup(health_check.value, "matcher", null)
-#     }
-#   }
-
-#   depends_on = [aws_alb.this]
-
-#   lifecycle {
-#     create_before_destroy = true
-#   }
-# }
