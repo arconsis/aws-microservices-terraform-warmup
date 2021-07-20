@@ -4,38 +4,9 @@ provider "aws" {
   region                  = var.aws_region
 }
 
-module "networking" {
-  source               = "../modules/network"
-  create_vpc           = var.create_vpc
-  create_igw           = var.create_igw
-  single_nat_gateway   = var.single_nat_gateway
-  enable_nat_gateway   = var.enable_nat_gateway
-  region               = var.aws_region
-  vpc_name             = var.vpc_name
-  cidr_block           = var.cidr_block
-  availability_zones   = var.availability_zones
-  public_subnet_cidrs  = var.public_subnet_cidrs
-  private_subnet_cidrs = var.private_subnet_cidrs
-}
-
 ################################################################################
-# ECS Tasks Execution IAM
+# IAM
 ################################################################################
-# ECS task execution role data
-data "aws_iam_policy_document" "ecs_task_execution_role" {
-  version = "2012-10-17"
-  statement {
-    sid     = ""
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["ecs-tasks.amazonaws.com"]
-    }
-  }
-}
-
 # ECS task execution role
 resource "aws_iam_role" "ecs_task_execution_role" {
   name               = var.ecs_task_execution_role_name
@@ -62,21 +33,36 @@ resource "aws_iam_role_policy" "vpc_flow_cloudwatch_logs_policy" {
   policy = file("../common/templates/policies/vpc_flow_cloudwatch_logs_policy.json.tpl")
 }
 
-# VPC Flows
 ################################################################################
-# Provides a VPC/Subnet/ENI Flow Log to capture IP traffic for a specific network interface, 
-# subnet, or VPC. Logs are sent to a CloudWatch Log Group or a S3 Bucket.
-# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/flow_log
-resource "aws_flow_log" "vpc_flow_logs" {
-  iam_role_arn    = aws_iam_role.vpc_flow_cloudwatch_logs_role.arn
-  log_destination = aws_cloudwatch_log_group.vpc_flow_logs.arn
-  traffic_type    = "ALL"
-  vpc_id          = module.networking.vpc_id
+# ECS
+################################################################################
+resource "aws_iam_role" "ecs_instance_role" {
+  name               = "ecs-instance-role-service"
+  path               = "/"
+  assume_role_policy = file("../common/templates/policies/ecs_instance_role.json.tpl")
 }
 
-resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
-  name              = "vpc-flow-logs"
-  retention_in_days = 30
+resource "aws_iam_role_policy_attachment" "ecs_instance_role_attachment" {
+  role       = aws_iam_role.ecs_instance_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+}
+
+resource "aws_iam_instance_profile" "ecs_service_role" {
+  role = aws_iam_role.ecs_instance_role.name
+}
+
+module "networking" {
+  source               = "../modules/network"
+  create_vpc           = var.create_vpc
+  create_igw           = var.create_igw
+  single_nat_gateway   = var.single_nat_gateway
+  enable_nat_gateway   = var.enable_nat_gateway
+  region               = var.aws_region
+  vpc_name             = var.vpc_name
+  cidr_block           = var.cidr_block
+  availability_zones   = var.availability_zones
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  private_subnet_cidrs = var.private_subnet_cidrs
 }
 
 module "alb_sg" {
@@ -160,10 +146,41 @@ module "public_alb" {
   ]
 }
 
+################################################################################
+# ECS Tasks Execution IAM
+################################################################################
+# ECS task execution role data
+data "aws_iam_policy_document" "ecs_task_execution_role" {
+  version = "2012-10-17"
+  statement {
+    sid     = ""
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+  }
+}
+
+module "ec2_launch_configuration" {
+  source                     = "../modules/ec2"
+  launch_configuration_name  = "ec2_ecs_launch_configuration"
+  iam_ecs_service_role_name  = aws_iam_instance_profile.ecs_service_role.name
+  security_groups_ids        = [module.ecs_tasks_sg.security_group_id]
+  subnet_ids                 = module.networking.private_subnet_ids
+  assign_public_ip           = false
+  project                    = var.project
+  aws_autoscaling_group_name = "ec2-ecs-asg"
+}
+
 module "ecs_cluster" {
-  source                   = "../modules/ecs_cluster"
-  project                  = var.project
-  create_capacity_provider = false
+  source                    = "../modules/ecs_cluster"
+  project                   = var.project
+  create_capacity_provider  = true
+  capacity_provider_name    = "capacity-provider-ecs-ec2"
+  aws_autoscaling_group_arn = module.ec2_launch_configuration.autoscaling_group_arn
 }
 
 resource "aws_service_discovery_private_dns_namespace" "segment" {
@@ -175,44 +192,11 @@ resource "aws_service_discovery_private_dns_namespace" "segment" {
 ################################################################################
 # BOOKS API ECS Service
 ################################################################################
-resource "aws_alb_target_group" "books_api_tg" {
-  name        = var.books_api_tg
-  port        = 80
-  protocol    = "HTTP"
-  vpc_id      = module.networking.vpc_id
-  target_type = "ip"
-
-  health_check {
-    healthy_threshold   = "3"
-    interval            = "30"
-    protocol            = "HTTP"
-    matcher             = "200"
-    timeout             = "3"
-    path                = var.books_api_health_check_path
-    unhealthy_threshold = "2"
-  }
-}
-
-resource "aws_alb_listener_rule" "books_api_listener_rule" {
-  listener_arn = module.public_alb.alb_listener_http_tcp_arn
-  priority     = 1
-
-  action {
-    type             = "forward" # Redirect all traffic from the ALB to the target group
-    target_group_arn = aws_alb_target_group.books_api_tg.arn
-  }
-
-  condition {
-    path_pattern {
-      values = var.books_api_tg_paths
-    }
-  }
-}
-
-module "ecs_books_api_fargate" {
+module "ecs_books_api_ec2" {
   source                                  = "../modules/ecs"
   aws_region                              = var.aws_region
   cluster_id                              = module.ecs_cluster.cluster_id
+  vpc_id                                  = module.networking.vpc_id
   cluster_name                            = module.ecs_cluster.cluster_name
   has_discovery                           = true
   dns_namespace_id                        = aws_service_discovery_private_dns_namespace.segment.id
@@ -233,29 +217,33 @@ module "ecs_books_api_fargate" {
   service_max_count                       = var.books_api_max_count
   service_task_family                     = var.books_api_task_family
   service_enviroment_variables            = []
+  service_health_check_path               = var.books_api_health_check_path
   network_mode                            = var.books_api_network_mode
   task_compatibilities                    = var.books_api_task_compatibilities
   launch_type                             = var.books_api_launch_type
   alb_listener                            = module.public_alb.alb_listener
   has_alb                                 = true
-  alb_target_group                        = aws_alb_target_group.books_api_tg.id
-  enable_autoscaling                      = true
-  autoscaling_name                        = "${var.books_api_name}_scaling"
-  autoscaling_settings = {
-    max_capacity       = 4
-    min_capacity       = 2
-    target_cpu_value   = 60
-    scale_in_cooldown  = 60
-    scale_out_cooldown = 900
-  }
+  alb_listener_tg                         = var.books_api_tg
+  alb_listener_port                       = 80
+  alb_listener_protocol                   = "HTTP"
+  alb_listener_target_type                = "ip"
+  alb_listener_arn                        = module.public_alb.alb_listener_http_tcp_arn
+  alb_listener_rule_priority              = 1
+  alb_listener_rule_type                  = "forward"
+  alb_service_tg_paths                    = var.books_api_tg_paths
+  enable_autoscaling                      = false
+  autoscaling_name                        = null
+  autoscaling_settings                    = {}
+  has_ordered_placement                   = true
 }
 
 ################################################################################
 # RECOMMENDATION API ECS Service
 ################################################################################
-module "ecs_recommendations_api_fargate" {
+module "ecs_recommendations_api_ec2" {
   source                                  = "../modules/ecs"
   aws_region                              = var.aws_region
+  vpc_id                                  = module.networking.vpc_id
   cluster_id                              = module.ecs_cluster.cluster_id
   cluster_name                            = module.ecs_cluster.cluster_name
   has_discovery                           = true
@@ -268,7 +256,7 @@ module "ecs_recommendations_api_fargate" {
   logs_retention_in_days                  = 30
   fargate_cpu                             = var.fargate_cpu
   fargate_memory                          = var.fargate_memory
-  health_check_grace_period_seconds       = var.health_check_grace_period_seconds
+  health_check_grace_period_seconds       = 180
   service_name                            = var.recommendations_api_name
   service_image                           = var.recommendations_api_image
   service_aws_logs_group                  = var.recommendations_api_aws_logs_group
@@ -277,63 +265,33 @@ module "ecs_recommendations_api_fargate" {
   service_max_count                       = var.recommendations_api_max_count
   service_task_family                     = var.recommendations_api_task_family
   service_enviroment_variables            = []
-  network_mode                            = var.recommendations_api_network_mode
-  task_compatibilities                    = var.recommendations_api_task_compatibilities
-  launch_type                             = var.recommendations_api_launch_type
+  service_health_check_path               = null
+  network_mode                            = "awsvpc"
+  task_compatibilities                    = ["EC2"]
+  launch_type                             = "EC2"
   alb_listener                            = module.public_alb.alb_listener
   has_alb                                 = false
-  alb_target_group                        = null
-  enable_autoscaling                      = true
-  autoscaling_name                        = "${var.recommendations_api_name}_scaling"
-  autoscaling_settings = {
-    max_capacity       = 4
-    min_capacity       = 2
-    target_cpu_value   = 60
-    scale_in_cooldown  = 60
-    scale_out_cooldown = 900
-  }
+  alb_listener_tg                         = null
+  alb_listener_port                       = null
+  alb_listener_protocol                   = null
+  alb_listener_target_type                = null
+  alb_listener_arn                        = null
+  alb_listener_rule_priority              = null
+  alb_listener_rule_type                  = "forward"
+  alb_service_tg_paths                    = []
+  enable_autoscaling                      = false
+  autoscaling_name                        = null
+  autoscaling_settings                    = {}
+  has_ordered_placement                   = true
 }
 
 ################################################################################
 # USERS API ECS Service
 ################################################################################
-resource "aws_alb_target_group" "users_api_tg" {
-  name        = "users-api-tg"
-  port        = 80
-  protocol    = "HTTP"
-  vpc_id      = module.networking.vpc_id
-  target_type = "ip"
-
-  health_check {
-    healthy_threshold   = "3"
-    interval            = "30"
-    protocol            = "HTTP"
-    matcher             = "200"
-    timeout             = "3"
-    path                = var.users_api_health_check_path
-    unhealthy_threshold = "2"
-  }
-}
-
-resource "aws_alb_listener_rule" "users_api_listener_rule" {
-  listener_arn = module.public_alb.alb_listener_http_tcp_arn
-  priority     = 2
-
-  action {
-    type             = "forward" # Redirect all traffic from the ALB to the target group
-    target_group_arn = aws_alb_target_group.users_api_tg.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/users", "/users/*"]
-    }
-  }
-}
-
-module "ecs_users_api_fargate" {
+module "ecs_users_api_ec2" {
   source                                  = "../modules/ecs"
   aws_region                              = var.aws_region
+  vpc_id                                  = module.networking.vpc_id
   cluster_id                              = module.ecs_cluster.cluster_id
   cluster_name                            = module.ecs_cluster.cluster_name
   has_discovery                           = true
@@ -346,7 +304,7 @@ module "ecs_users_api_fargate" {
   logs_retention_in_days                  = 30
   fargate_cpu                             = var.fargate_cpu
   fargate_memory                          = var.fargate_memory
-  health_check_grace_period_seconds       = var.health_check_grace_period_seconds
+  health_check_grace_period_seconds       = 180
   service_name                            = var.users_api_name
   service_image                           = var.users_api_image
   service_aws_logs_group                  = var.users_api_aws_logs_group
@@ -357,22 +315,25 @@ module "ecs_users_api_fargate" {
   service_enviroment_variables = [
     {
       "name" : "RECOMMENDATIONS_SERVICE_URL",
-      "value" : "http://${module.ecs_recommendations_api_fargate.aws_service_discovery_service_name}.${aws_service_discovery_private_dns_namespace.segment.name}:${var.recommendations_api_port}"
+      "value" : "http://${module.ecs_recommendations_api_ec2.aws_service_discovery_service_name}.${aws_service_discovery_private_dns_namespace.segment.name}:${var.recommendations_api_port}"
     }
   ]
-  network_mode         = var.users_api_network_mode
-  task_compatibilities = var.users_api_task_compatibilities
-  launch_type          = var.users_api_launch_type
-  alb_listener         = module.public_alb.alb_listener
-  has_alb              = true
-  alb_target_group     = aws_alb_target_group.users_api_tg.id
-  enable_autoscaling   = true
-  autoscaling_name     = "${var.users_api_name}_scaling"
-  autoscaling_settings = {
-    max_capacity       = 4
-    min_capacity       = 2
-    target_cpu_value   = 60
-    scale_in_cooldown  = 60
-    scale_out_cooldown = 900
-  }
+  service_health_check_path               = var.users_api_health_check_path
+  network_mode                            = "awsvpc"
+  task_compatibilities                    = ["EC2"]
+  launch_type                             = "EC2"
+  alb_listener                            = module.public_alb.alb_listener
+  has_alb                                 = true
+  alb_listener_tg                         = var.users_api_tg
+  alb_listener_port                       = 80
+  alb_listener_protocol                   = "HTTP"
+  alb_listener_target_type                = "ip"
+  alb_listener_arn                        = module.public_alb.alb_listener_http_tcp_arn
+  alb_listener_rule_priority              = 2
+  alb_listener_rule_type                  = "forward"
+  alb_service_tg_paths                    = var.users_api_tg_paths
+  enable_autoscaling                      = false
+  autoscaling_name                        = null
+  autoscaling_settings                    = {}
+  has_ordered_placement                   = true
 }
