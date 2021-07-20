@@ -1,17 +1,17 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: books-backend-ingress
+  name: promotions-backend-ingress
   namespace: tf-tutorial
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
     kubernetes.io/ingress.class: alb
 spec:
   rules:
-    - host: books.service.local
+    - host: promotions.service.local
     - http:
         paths:
-          - path: /books
+          - path: /promotions
             backend:
-              serviceName: books-service
-              servicePort: 5000
+              serviceName: promotions-service
+              servicePort: 8080

@@ -4,10 +4,6 @@ provider "aws" {
   region                  = var.aws_region
 }
 
-locals {
-  cluster_name = "my-cluster"
-}
-
 data "aws_eks_cluster" "cluster" {
   name = module.eks.cluster_id
 }
@@ -40,7 +36,7 @@ module "networking" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  cluster_name    = "${local.cluster_name}"
+  cluster_name    = "${var.cluster_name}"
   cluster_version = "1.17"
 
   subnets         = module.networking.private_subnet_ids
@@ -113,6 +109,6 @@ resource "aws_iam_policy" "worker_policy" {
 #   }
 #   set {
 #     name  = "clusterName"
-#     value = local.cluster_name
+#     value = var.cluster_name
 #   }
 # }

@@ -1,25 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: books-backend
+  name: promotions-backend
   labels:
-    app: books-backend
+    app: promotions-backend
   namespace: tf-tutorial
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: books-backend
+      name: promotions-backend
   template:
     metadata:
       labels:
-        name: books-backend
+        name: promotions-backend
     spec:
       containers:
-      - name: books-backend-service
+      - name: promotions-backend-service
         imagePullPolicy: Always
-        image: eldimious/books:latest
+        image: eldimious/promotions:latest
         ports:
-          - containerPort: 5000
+          - containerPort: 8080
             protocol: TCP
-            
