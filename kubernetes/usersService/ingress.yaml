@@ -1,0 +1,17 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: users-backend-ingress
+  namespace: tf-tutorial
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    kubernetes.io/ingress.class: alb
+spec:
+  rules:
+    - host: users.service.local
+    - http:
+        paths:
+          - path: /users
+            backend:
+              serviceName: users-service
+              servicePort: 3000

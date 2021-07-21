@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: promotions-backend
+  labels:
+    app: promotions-backend
+  namespace: tf-tutorial
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: promotions-backend
+  template:
+    metadata:
+      labels:
+        name: promotions-backend
+    spec:
+      containers:
+      - name: promotions-backend-service
+        imagePullPolicy: Always
+        image: eldimious/promotions:latest
+        ports:
+          - containerPort: 8080
+            protocol: TCP
