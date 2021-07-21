@@ -1,0 +1,17 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: recommendations-backend-ingress
+  namespace: tf-tutorial
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internal
+    kubernetes.io/ingress.class: alb
+spec:
+  rules:
+    - host: recommendations.service.local
+    - http:
+        paths:
+          - path: /recommendations
+            backend:
+              serviceName: recommendations-service
+              servicePort: 3333

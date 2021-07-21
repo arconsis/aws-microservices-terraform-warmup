@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: tf-tutorial
+  labels:
+    app: recommendations-service
+  name: recommendations-service
+spec:
+  type: NodePort
+  ports:
+  - port: 3333
+    targetPort: 3333
+    protocol: TCP
+  selector:
+    name: recommendations-backend

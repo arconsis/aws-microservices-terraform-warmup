@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendations-backend
+  labels:
+    app: recommendations-backend
+  namespace: tf-tutorial
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: recommendations-backend
+  template:
+    metadata:
+      labels:
+        name: recommendations-backend
+    spec:
+      containers:
+      - name: recommendations-backend-service
+        imagePullPolicy: Always
+        image: eldimious/recommendations:latest
+        ports:
+          - containerPort: 3333
+            protocol: TCP
