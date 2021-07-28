@@ -1,1 +1,0 @@
-{"filename": "builds/fee583de8211d43f09d4f8eca575eba60eabe06851f6df7133ea9e426169ace0.zip", "runtime": "nodejs14.10", "artifacts_dir": "builds", "build_plan": [["zip", "../../../lambdas/users/createUser.js", null]]}

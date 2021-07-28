@@ -37,10 +37,10 @@ module "private_vpc_sg" {
   egress_protocol          = "-1"
 }
 
-module "lambda_function" {
+module "create_user_lambda" {
   source = "terraform-aws-modules/lambda/aws"
 
-  function_name = "user-create"
+  function_name = "create-user"
   description   = "Create new user"
   handler       = "index.handler"
   runtime       = "nodejs14.x"
@@ -67,11 +67,71 @@ module "lambda_function" {
   }
 }
 
+module "get_user_lambda" {
+  source = "terraform-aws-modules/lambda/aws"
+
+  function_name = "get-user"
+  description   = "Get specific user"
+  handler       = "index.handler"
+  runtime       = "nodejs14.x"
+  publish       = true
+
+  source_path = "../../../lambdas/users/getUser"
+
+  store_on_s3 = true
+  s3_bucket   = "my-bucket-id-with-lambda-builds"
+
+  vpc_subnet_ids         = module.networking.private_subnet_ids
+  vpc_security_group_ids = [module.private_vpc_sg.security_group_id]
+  attach_network_policy = true
+
+  allowed_triggers = {
+    AllowExecutionFromAPIGateway = {
+      service    = "apigateway"
+      source_arn = "${module.api_gateway.apigatewayv2_api_execution_arn}/*/*/*"
+    }
+  }
+
+  environment_variables = {
+    Serverless = "Terraform"
+  }
+}
+
+module "list_users_lambda" {
+  source = "terraform-aws-modules/lambda/aws"
+
+  function_name = "list-users"
+  description   = "Get list of user"
+  handler       = "index.handler"
+  runtime       = "nodejs14.x"
+  publish       = true
+
+  source_path = "../../../lambdas/users/listUsers"
+
+  store_on_s3 = true
+  s3_bucket   = "my-bucket-id-with-lambda-builds"
+
+  vpc_subnet_ids         = module.networking.private_subnet_ids
+  vpc_security_group_ids = [module.private_vpc_sg.security_group_id]
+  attach_network_policy = true
+
+  allowed_triggers = {
+    AllowExecutionFromAPIGateway = {
+      service    = "apigateway"
+      source_arn = "${module.api_gateway.apigatewayv2_api_execution_arn}/*/*/*"
+    }
+  }
+
+  environment_variables = {
+    Serverless = "Terraform"
+  }
+}
+
 module "api_gateway" {
   source = "terraform-aws-modules/apigateway-v2/aws"
 
   name          = "dev-http"
-  description   = "My awesome HTTP API Gateway"
+  description   = "HTTP API Gateway"
   protocol_type = "HTTP"
 
   cors_configuration = {
@@ -87,7 +147,19 @@ module "api_gateway" {
   # Routes and integrations
   integrations = {
     "POST /users" = {
-      lambda_arn             = module.lambda_function.lambda_function_invoke_arn
+      lambda_arn             = module.create_user_lambda.lambda_function_invoke_arn
+      payload_format_version = "2.0"
+      timeout_milliseconds   = 12000
+    }
+
+    "GET /users" = {
+      lambda_arn             = module.list_users_lambda.lambda_function_invoke_arn
+      payload_format_version = "2.0"
+      timeout_milliseconds   = 12000
+    }
+
+    "GET /users/{userId}" = {
+      lambda_arn             = module.get_user_lambda.lambda_function_invoke_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
     }
