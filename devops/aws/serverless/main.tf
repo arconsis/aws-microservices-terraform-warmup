@@ -4,6 +4,9 @@ provider "aws" {
   region                  = var.aws_region
 }
 
+################################################################################
+# VPC Configuration
+################################################################################
 module "networking" {
   source               = "../modules/network"
   create_vpc           = var.create_vpc
@@ -18,11 +21,14 @@ module "networking" {
   private_subnet_cidrs = var.private_subnet_cidrs
 }
 
+################################################################################
+# SG Configuration
+################################################################################
 module "private_vpc_sg" {
   source                   = "../modules/security"
   create_vpc               = var.create_vpc
   create_sg                = true
-  sg_name                  = "lambda-private-security-group"
+  sg_name                  = "private-lambda-security-group"
   description              = "Controls access to the private lambdas (not internet facing)"
   rule_ingress_description = "allow inbound access only from resources in VPC"
   rule_egress_description  = "allow all outbound"
@@ -37,6 +43,9 @@ module "private_vpc_sg" {
   egress_protocol          = "-1"
 }
 
+################################################################################
+# Lambdas Configuration
+################################################################################
 module "create_user_lambda" {
   source = "terraform-aws-modules/lambda/aws"
 
@@ -127,6 +136,9 @@ module "list_users_lambda" {
   }
 }
 
+################################################################################
+# API GW Configuration
+################################################################################
 module "api_gateway" {
   source = "terraform-aws-modules/apigateway-v2/aws"
 
@@ -140,9 +152,6 @@ module "api_gateway" {
     allow_origins = ["*"]
   }
 
-  # Access logs
-  # default_stage_access_log_destination_arn = "arn:aws:logs:eu-west-1:835367859851:log-group:debug-apigateway"
-  # default_stage_access_log_format          = "$context.identity.sourceIp - - [$context.requestTime] \"$context.httpMethod $context.routeKey $context.protocol\" $context.status $context.responseLength $context.requestId $context.integrationErrorMessage"
   create_api_domain_name = false
   # Routes and integrations
   integrations = {
