@@ -71,6 +71,8 @@ module "create_user_lambda" {
     }
   }
 
+  attach_dead_letter_policy = false
+
   environment_variables = {
     Serverless = "Terraform"
   }
@@ -100,6 +102,8 @@ module "get_user_lambda" {
       source_arn = "${module.api_gateway.apigatewayv2_api_execution_arn}/*/*/*"
     }
   }
+
+  attach_dead_letter_policy = false
 
   environment_variables = {
     Serverless = "Terraform"
@@ -131,6 +135,40 @@ module "list_users_lambda" {
     }
   }
 
+  attach_dead_letter_policy = false
+
+  environment_variables = {
+    Serverless = "Terraform"
+  }
+}
+
+module "auth" {
+  source = "terraform-aws-modules/lambda/aws"
+
+  function_name = "auth"
+  description   = "Auth0 authorizer"
+  handler       = "index.handler"
+  runtime       = "nodejs14.x"
+  publish       = true
+
+  source_path = "../../../lambdas/auth"
+
+  store_on_s3 = true
+  s3_bucket   = "my-bucket-id-with-lambda-builds"
+
+  vpc_subnet_ids         = module.networking.private_subnet_ids
+  vpc_security_group_ids = [module.private_vpc_sg.security_group_id]
+  attach_network_policy = true
+
+  allowed_triggers = {
+    AllowExecutionFromAPIGateway = {
+      service    = "apigateway"
+      source_arn = "${module.api_gateway.apigatewayv2_api_execution_arn}/*/*/*"
+    }
+  }
+
+  attach_dead_letter_policy = false
+  
   environment_variables = {
     Serverless = "Terraform"
   }
@@ -165,16 +203,56 @@ module "api_gateway" {
       lambda_arn             = module.list_users_lambda.lambda_function_invoke_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
+      authorization_type     = "CUSTOM"
+      authorizer_id          = aws_apigatewayv2_authorizer.auth.id
     }
 
     "GET /users/{userId}" = {
       lambda_arn             = module.get_user_lambda.lambda_function_invoke_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
+      authorization_type     = "CUSTOM"
+      authorizer_id          = aws_apigatewayv2_authorizer.auth.id
     }
   }
 
   tags = {
     Name = "http-apigateway"
   }
+}
+
+resource "aws_iam_role" "invocation_role" {
+  name = "api_gateway_auth_invocation"
+  path = "/"
+
+  assume_role_policy = file("../common/templates/policies/api_gateway_auth_invocation.json.tpl")
+}
+
+resource "aws_iam_role_policy" "invocation_policy" {
+  name = "default"
+  role = aws_iam_role.invocation_role.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "lambda:InvokeFunction",
+      "Effect": "Allow",
+      "Resource": "${module.auth.lambda_function_arn}"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_apigatewayv2_authorizer" "auth" {
+  api_id           = module.api_gateway.apigatewayv2_api_id
+  authorizer_type  = "REQUEST"
+  identity_sources = ["$request.header.Authorization"]
+  name             = "LambdaAuthorizer"
+  authorizer_uri   = module.auth.lambda_function_invoke_arn
+  authorizer_payload_format_version = "2.0"
+  enable_simple_responses = true
+  authorizer_credentials_arn = aws_iam_role.invocation_role.arn
 }
