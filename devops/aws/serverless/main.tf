@@ -44,6 +44,24 @@ module "private_vpc_sg" {
 }
 
 ################################################################################
+# Lambdas Layer Configuration
+################################################################################
+module "lambda_layer_logging" {
+  source = "terraform-aws-modules/lambda/aws"
+
+  create_layer = true
+
+  layer_name          = "lambda-layer-logging"
+  description         = "Help on lambda logging"
+  compatible_runtimes = ["nodejs14.x"]
+
+  source_path = "../../../backend/serverless/layers/logging"
+
+  store_on_s3 = true
+  s3_bucket   = "my-bucket-id-with-lambda-builds"
+}
+
+################################################################################
 # Lambdas Configuration
 ################################################################################
 module "create_user_lambda" {
@@ -55,7 +73,7 @@ module "create_user_lambda" {
   runtime       = "nodejs14.x"
   publish       = true
 
-  source_path = "../../../lambdas/users/createUser"
+  source_path = "../../../backend/serverless/lambdas/users/createUser"
 
   store_on_s3 = true
   s3_bucket   = "my-bucket-id-with-lambda-builds"
@@ -72,6 +90,10 @@ module "create_user_lambda" {
   }
 
   attach_dead_letter_policy = false
+
+  layers = [
+    module.lambda_layer_logging.lambda_layer_arn,
+  ]
 
   environment_variables = {
     Serverless = "Terraform"
@@ -87,7 +109,7 @@ module "get_user_lambda" {
   runtime       = "nodejs14.x"
   publish       = true
 
-  source_path = "../../../lambdas/users/getUser"
+  source_path = "../../../backend/serverless/lambdas/users/getUser"
 
   store_on_s3 = true
   s3_bucket   = "my-bucket-id-with-lambda-builds"
@@ -104,6 +126,10 @@ module "get_user_lambda" {
   }
 
   attach_dead_letter_policy = false
+
+  layers = [
+    module.lambda_layer_logging.lambda_layer_arn,
+  ]
 
   environment_variables = {
     Serverless = "Terraform"
@@ -119,7 +145,7 @@ module "list_users_lambda" {
   runtime       = "nodejs14.x"
   publish       = true
 
-  source_path = "../../../lambdas/users/listUsers"
+  source_path = "../../../backend/serverless/lambdas/users/listUsers"
 
   store_on_s3 = true
   s3_bucket   = "my-bucket-id-with-lambda-builds"
@@ -137,6 +163,10 @@ module "list_users_lambda" {
 
   attach_dead_letter_policy = false
 
+  layers = [
+    module.lambda_layer_logging.lambda_layer_arn,
+  ]
+
   environment_variables = {
     Serverless = "Terraform"
   }
@@ -151,7 +181,7 @@ module "auth" {
   runtime       = "nodejs14.x"
   publish       = true
 
-  source_path = "../../../lambdas/auth"
+  source_path = "../../../backend/serverless/lambdas/auth"
 
   store_on_s3 = true
   s3_bucket   = "my-bucket-id-with-lambda-builds"
@@ -169,6 +199,10 @@ module "auth" {
 
   attach_dead_letter_policy = false
   
+  layers = [
+    module.lambda_layer_logging.lambda_layer_arn,
+  ]
+
   environment_variables = {
     Serverless = "Terraform"
   }
