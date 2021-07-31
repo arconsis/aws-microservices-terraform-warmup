@@ -1,12 +1,12 @@
 {
   "name": "db",
   "version": "1.0.0",
-  "description": "",
+  "description": "Main database models and exported methods for lambdas",
+  "author": "Dimos Botsaris <botsaris.d@gmail.com>",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
   "license": "ISC",
   "dependencies": {
     "pg": "^8.7.1"
