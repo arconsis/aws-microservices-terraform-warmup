@@ -172,21 +172,6 @@ module "lambda_layer_database" {
   s3_bucket   = "my-bucket-id-with-lambda-builds"
 }
 
-module "lambda_layer_simple_db" {
-  source = "terraform-aws-modules/lambda/aws"
-
-  create_layer = true
-
-  layer_name          = "lambda-layer-simple-db"
-  description         = "Handle lambdas database integration"
-  compatible_runtimes = ["nodejs14.x"]
-
-  source_path = "../../../backend/serverless/layers/db"
-
-  store_on_s3 = true
-  s3_bucket   = "my-bucket-id-with-lambda-builds"
-}
-
 ################################################################################
 # Lambdas Configuration
 ################################################################################
@@ -220,8 +205,7 @@ module "create_user_lambda" {
 
   layers = [
     module.lambda_layer_logging.lambda_layer_arn,
-    module.lambda_layer_database.lambda_layer_arn,
-    module.lambda_layer_simple_db.lambda_layer_arn
+    module.lambda_layer_database.lambda_layer_arn
   ]
 
   depends_on = [module.rds_postgresql]
