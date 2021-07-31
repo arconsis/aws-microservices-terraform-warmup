@@ -46,35 +46,35 @@ module "private_vpc_sg" {
 ################################################################################
 # Database Configuration
 ################################################################################
-module "aurora_postgresql" {
-  source  = "terraform-aws-modules/rds-aurora/aws"
-  version = "~> 3.0"
+# module "aurora_postgresql" {
+#   source  = "terraform-aws-modules/rds-aurora/aws"
+#   version = "~> 3.0"
 
-  name           = "aurora-db-postgres"
-  engine         = "aurora-postgresql"
-  engine_version = "11.9"
-  instance_type  = "db.t3.medium"
+#   name           = "aurora-db-postgres"
+#   engine         = "aurora-postgresql"
+#   engine_version = "11.9"
+#   instance_type  = "db.t3.medium"
 
-  vpc_id  = module.networking.vpc_id
-  subnets = module.networking.private_subnet_ids
+#   vpc_id  = module.networking.vpc_id
+#   subnets = module.networking.private_subnet_ids
 
-  replica_count           = 1
-  allowed_security_groups = [module.private_vpc_sg.security_group_id]
-  # allowed_cidr_blocks     = ["10.20.0.0/20"]
+#   replica_count           = 1
+#   allowed_security_groups = [module.private_vpc_sg.security_group_id]
+#   # allowed_cidr_blocks     = ["10.20.0.0/20"]
 
-  storage_encrypted   = true
-  apply_immediately   = true
-  monitoring_interval = 10
+#   storage_encrypted   = true
+#   apply_immediately   = true
+#   monitoring_interval = 10
 
-  # db_parameter_group_name         = "main"
-  # db_cluster_parameter_group_name = "main"
+#   # db_parameter_group_name         = "main"
+#   # db_cluster_parameter_group_name = "main"
 
-  enabled_cloudwatch_logs_exports = ["postgresql"]
+#   enabled_cloudwatch_logs_exports = ["postgresql"]
 
-  tags = {
-    Environment = "dev"
-  }
-}
+#   tags = {
+#     Environment = "dev"
+#   }
+# }
 
 module "rds_postgresql" {
   source = "terraform-aws-modules/rds/aws"
@@ -86,7 +86,7 @@ module "rds_postgresql" {
   engine_version       = "11.10"
   family               = "postgres11" # DB parameter group
   major_engine_version = "11"         # DB option group
-  instance_class       = "db.t3.medium"
+  instance_class       = "db.t3.small"
 
   allocated_storage     = 20
   max_allocated_storage = 100
@@ -198,6 +198,7 @@ module "create_user_lambda" {
   handler       = "index.handler"
   runtime       = "nodejs14.x"
   publish       = true
+  timeout       = 60
 
   source_path = "../../../backend/serverless/lambdas/users/createUser"
 
@@ -223,7 +224,7 @@ module "create_user_lambda" {
     module.lambda_layer_simple_db.lambda_layer_arn
   ]
 
-  depends_on = [module.aurora_postgresql]
+  depends_on = [module.rds_postgresql]
 
   environment_variables = {
     DB_URI = module.rds_postgresql.db_instance_address,
@@ -243,6 +244,7 @@ module "get_user_lambda" {
   handler       = "index.handler"
   runtime       = "nodejs14.x"
   publish       = true
+  timeout       = 60
 
   source_path = "../../../backend/serverless/lambdas/users/getUser"
 
@@ -279,6 +281,7 @@ module "list_users_lambda" {
   handler       = "index.handler"
   runtime       = "nodejs14.x"
   publish       = true
+  timeout       = 60
 
   source_path = "../../../backend/serverless/lambdas/users/listUsers"
 

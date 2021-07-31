@@ -1,35 +1,36 @@
 const logging = require('logging');
 const database = require('database');
-const db = require('db');
 require('dotenv').config();
 
 exports.handler = async function(event, context) {
   logging.log("EVENT: \n" + JSON.stringify(event, null, 2));
-  const client = db.create({
-    username: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASS,
-    port: process.env.DB_PORT,
+  const mainDb = database.create({
+    connectionUri: `postgres://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
   });
-
   try {
-    await client.connect();
-    const res = await client.query('SELECT $1::text as message', [
-      'DB connection success!'
-    ]);
-    logging.log('Connection to main database established', res);
-    return {
+    await mainDb.authenticate();
+    console.log('Connection has been established successfully.');
+    const userResponse = await mainDb.interfaces.usersInterface.createUser({
+      firstName: 'Dimos',
+      lastName: 'Botsaris',
+      userName: 'eldimious',
+      email: 'botsaris.d@gmail.com',
+      password: 'secret',
+    });
+    await mainDb.close();
+    const response = {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        message: 'Created user with success',
-      }),
+      body: {
+        userResponse
+      },
     };
+    return context.succeed(response);
   } catch (error) {
-    return {
+    await mainDb.close();
+    const response = {
       statusCode: 500,
       headers: {
         'Content-Type': 'application/json',
@@ -38,5 +39,6 @@ exports.handler = async function(event, context) {
         message: error.message,
       }),
     };
+    return context.fail(response);
   }
 }
