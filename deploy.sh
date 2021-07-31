@@ -7,19 +7,19 @@ if [ $lauch_type != "ec2" ] && [ $lauch_type != "fargate" ] && [ $lauch_type != 
 fi
 
 # Deploy books API docker image
-cd ./services/booksService &&
+cd ./backend/services/booksService &&
 ./deploy.sh &&
 
 # Deploy users API docker image
-cd ../usersService &&
+cd ../backend/usersService &&
 ./deploy.sh &&
 
 # Deploy recommendations API docker image
-cd ../recommendationsService &&
+cd ../backend/recommendationsService &&
 ./deploy.sh &&
 
 # Deploy promotions API docker image
-cd ../promotionsService &&
+cd ../backend/promotionsService &&
 ./deploy.sh &&
 
 # Deploy to cloud host (default AWS)

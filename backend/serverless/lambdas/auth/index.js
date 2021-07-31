@@ -1,3 +1,5 @@
+const logging = require('logging');
+
 const BEARER_TOKEN_PREFIX = 'bearer';
 const TOKEN_VALUE = 'secret';
 
@@ -30,8 +32,8 @@ const generateResponse = (isAuthorized, context = {}) => {
 }
 
 exports.handler = async function(event, context) {
-  console.log("EVENT: \n" + JSON.stringify(event, null, 2));
-  console.log("Authorization: ", event.headers.authorization)
+  logging.log("EVENT: \n" + JSON.stringify(event, null, 2));
+  logging.log("Authorization: ", event.headers.authorization)
   if (!event.headers || !event.headers.authorization) {
     return generateResponse(false, { AuthInfo: "defaultdeny" });
   }
