@@ -1,5 +1,5 @@
 {
-  "name": "createuser",
+  "name": "db",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,7 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "dotenv": "^8.2.0",
     "pg": "^8.7.1"
   }
 }
