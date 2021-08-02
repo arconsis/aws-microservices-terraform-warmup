@@ -7,55 +7,64 @@ const {
   databaseUri,
 } = require('./configuration');
 
-const database = databaseFactory.init(databaseUri);
-const usersRepository = usersRepositoryFactory.init({
-  dataStores: database.dataStores,
-});
-const usersService = usersServiceFactory.init({
-  usersRepository,
-});
-
 // const closeConnection = async (db) => {
 //   await db.sequelize.connectionManager.pool.drain();
 //   return db.sequelize.connectionManager.pool.destroyAllNow()
 // };
 
+function getPayloadAsJSON(event) {
+  try {
+    return JSON.parse(event.body);
+  } catch (error) {
+    return undefined;
+  }
+}
+
 exports.handler = async function createUser(event, context) {
   logging.log(`EVENT: \n ${JSON.stringify(event, null, 2)}`);
+  const database = databaseFactory.init(databaseUri);
+  const usersRepository = usersRepositoryFactory.init({
+    dataStores: database.dataStores,
+  });
+  const usersService = usersServiceFactory.init({
+    usersRepository,
+  });
   try {
     await database.authenticate();
     logging.log('Connection has been established successfully.');
-    validations.assertCreateUserPayload(event);
+    if (!event || !event.body) {
+      throw new Error('Event not found');
+    }
+    const decodedEvent = getPayloadAsJSON(event);
+    validations.assertCreateUserPayload(decodedEvent);
     const userResponse = await usersService.createUser({
-      firstName: event.firstName,
-      lastName: event.lastName,
-      userName: event.userName,
-      email: event.email,
-      password: event.password,
+      firstName: decodedEvent.firstName,
+      lastName: decodedEvent.lastName,
+      userName: decodedEvent.userName,
+      email: decodedEvent.email,
+      password: decodedEvent.password,
     });
     await database.close();
-    const response = {
+    return {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
       },
-      body: {
+      body: JSON.stringify({
         userResponse,
-      },
+      }),
     };
-    return context.succeed(response);
   } catch (error) {
     logging.error('Error: ', error);
     await database.close(database);
-    const response = {
+    return {
       statusCode: 500,
       headers: {
         'Content-Type': 'application/json',
       },
-      body: {
+      body: JSON.stringify({
         error: error.message || 'Error when create user',
-      },
+      }),
     };
-    return context.fail(response);
   }
 };

@@ -8,36 +8,57 @@ const {
   databaseUri,
 } = require('./common/configuration');
 
-const database = databaseFactory.init(databaseUri)
-const tokenRepository = tokenRepositoryFactory.init();
-const usersRepository = usersRepositoryFactory.init({
-  dataStores: database.dataStores,
-});
-const authService = authServiceFactory.init({
-  tokenRepository,
-  usersRepository,
-});
+function getPayloadAsJSON(event) {
+  try {
+    return JSON.parse(event.body);
+  } catch (error) {
+    return undefined;
+  }
+}
 
 exports.handler = async function loginHandler(event, context) {
+  const database = databaseFactory.init(databaseUri);
+  const tokenRepository = tokenRepositoryFactory.init();
+  const usersRepository = usersRepositoryFactory.init({
+    dataStores: database.dataStores,
+  });
+  const authService = authServiceFactory.init({
+    tokenRepository,
+    usersRepository,
+  });
   try {
     logging.log('Enter login handler');
     await database.authenticate();
-    validations.assertLoginEvent(event);
+    if (!event || !event.body) {
+      throw new Error('Event not found');
+    }
+    const decodedEvent = getPayloadAsJSON(event);
+    validations.assertLoginEvent(decodedEvent);
     const token = await authService.login({
-      email: event.email,
-      password: event.password,
+      email: decodedEvent.email,
+      password: decodedEvent.password,
     });
-    const res = {
+    return {
       statusCode: 200,
-      body: {
-        token,
+      headers: {
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        token,
+      }),
     };
-    context.succeed(res);
   } catch (error) {
     const errMsg = error && error.message
       ? error.message
       : 'Error on login process';
-    context.fail(errMsg);
+    return {
+      statusCode: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: {
+        error: errMsg,
+      },
+    };
   }
 };
