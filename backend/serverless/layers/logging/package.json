@@ -1,0 +1,11 @@
+{
+  "name": "logging",
+  "version": "1.0.0",
+  "description": "Logger layer for lambdas",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Dimos Botsaris <botsaris.d@gmail.com>",
+  "license": "ISC"
+}

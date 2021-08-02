@@ -1,0 +1,9 @@
+const WRONG_PASSWORD_ERROR_MESSAGE = 'Wrong password.';
+const TOKEN_EXPIRATION = '3d';
+const BEARER_TOKEN_PREFIX = 'bearer';
+
+module.exports = {
+  WRONG_PASSWORD_ERROR_MESSAGE,
+  TOKEN_EXPIRATION,
+  BEARER_TOKEN_PREFIX,
+};

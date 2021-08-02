@@ -1,44 +1,61 @@
-const logging = require('logging');
-const database = require('database');
-require('dotenv').config();
+const logging = require('./common/logging');
+const validations = require('./presentation/middleware/validations');
+const databaseFactory = require('./data/infrastructure/database');
+const usersRepositoryFactory = require('./data/repositories/users/usersRepository');
+const usersServiceFactory = require('./domain/users/service');
+const {
+  databaseUri,
+} = require('./configuration');
 
-exports.handler = async function(event, context) {
-  logging.log("EVENT: \n" + JSON.stringify(event, null, 2));
-  const mainDb = database.create({
-    connectionUri: `postgres://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
-  });
+const database = databaseFactory.init(databaseUri);
+const usersRepository = usersRepositoryFactory.init({
+  dataStores: database.dataStores,
+});
+const usersService = usersServiceFactory.init({
+  usersRepository,
+});
+
+// const closeConnection = async (db) => {
+//   await db.sequelize.connectionManager.pool.drain();
+//   return db.sequelize.connectionManager.pool.destroyAllNow()
+// };
+
+exports.handler = async function createUser(event, context) {
+  logging.log(`EVENT: \n ${JSON.stringify(event, null, 2)}`);
   try {
-    await mainDb.authenticate();
-    console.log('Connection has been established successfully.');
-    const userResponse = await mainDb.interfaces.usersInterface.createUser({
-      firstName: 'Dimos',
-      lastName: 'Botsaris',
-      userName: 'eldimious',
-      email: 'botsaris.d@gmail.com',
-      password: 'secret',
+    await database.authenticate();
+    logging.log('Connection has been established successfully.');
+    validations.assertCreateUserPayload(event);
+    const userResponse = await usersService.createUser({
+      firstName: event.firstName,
+      lastName: event.lastName,
+      userName: event.userName,
+      email: event.email,
+      password: event.password,
     });
-    await mainDb.close();
+    await database.close();
     const response = {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
       },
       body: {
-        userResponse
+        userResponse,
       },
     };
     return context.succeed(response);
   } catch (error) {
-    await mainDb.close();
+    logging.error('Error: ', error);
+    await database.close(database);
     const response = {
       statusCode: 500,
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        message: error.message,
-      }),
+      body: {
+        error: error.message || 'Error when create user',
+      },
     };
     return context.fail(response);
   }
-}
+};

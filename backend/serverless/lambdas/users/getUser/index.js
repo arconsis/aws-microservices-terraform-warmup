@@ -1,7 +1,7 @@
-const logging = require('logging');
+const logger = require('logging');
 
 exports.handler = async function(event, context) {
-  logging.log("EVENT: \n" + JSON.stringify(event, null, 2));
+  logger.log("EVENT: \n" + JSON.stringify(event, null, 2));
   return {
     statusCode: 200,
     headers: {
