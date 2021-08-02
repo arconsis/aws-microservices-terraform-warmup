@@ -1,15 +1,17 @@
 {
-  "name": "createuser",
+  "name": "login",
   "version": "1.0.0",
-  "description": "",
+  "description": "Handles token generation",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Dimos Botsaris <botsaris.d@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "dotenv": "^8.2.0",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^10.0.0",
+    "jsonwebtoken": "^8.5.1",
     "validator": "^13.6.0"
   },
   "devDependencies": {
