@@ -51,7 +51,7 @@ exports.handler = async function createUser(event, context) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        userResponse,
+        ...userResponse,
       }),
     };
   } catch (error) {

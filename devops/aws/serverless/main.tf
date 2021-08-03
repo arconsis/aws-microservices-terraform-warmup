@@ -97,8 +97,8 @@ module "rds_postgresql" {
   # "Error creating DB Instance: InvalidParameterValue: MasterUsername
   # user cannot be used as it is a reserved word used by the engine"
   name     = "postgres"
-  username = "eldimious"
-  password = "testtttt!"
+  username = var.database_username
+  password = var.database_password
   port     = 5432
 
   multi_az               = true
@@ -237,7 +237,7 @@ module "auth" {
   ]
 
   environment_variables = {
-    JWT_SECRET = "qXLckyaMcgyjek4WV"
+    JWT_SECRET = var.jwt_secret
   }
 }
 
@@ -280,7 +280,7 @@ module "login" {
     DB_NAME = module.rds_postgresql.db_instance_name,
     DB_USER = module.rds_postgresql.db_instance_username,
     DB_PASS = module.rds_postgresql.db_master_password,
-    JWT_SECRET = "qXLckyaMcgyjek4WV"
+    JWT_SECRET = var.jwt_secret
   }
 }
 ################################################################################
