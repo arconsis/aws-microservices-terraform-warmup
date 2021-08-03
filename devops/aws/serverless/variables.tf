@@ -67,3 +67,29 @@ variable "enable_dns_hostnames" {
   description = "DNS hostnames"
   default     = true
 }
+
+################################################################################
+# Database Configuration
+################################################################################
+# https://blog.gruntwork.io/a-comprehensive-guide-to-managing-secrets-in-your-terraform-code-1d586955ace1
+# using environment variables
+variable "database_username" {
+  description = "The username for the DB master user"
+  type        = string
+  sensitive   = true
+}
+
+variable "database_password" {
+  description = "The password for the DB master user"
+  type        = string
+  sensitive   = true
+}
+
+################################################################################
+# General Configuration
+################################################################################
+variable "jwt_secret" {
+  description = "The jwt secret we use to generate json web token"
+  type        = string
+  sensitive   = true
+}
