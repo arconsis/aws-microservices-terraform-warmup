@@ -1,7 +1,8 @@
 const logging = require('./common/logging');
 const validations = require('./presentation/middleware/validations');
+const errorHandler = require('./presentation/middleware/errors');
 const databaseFactory = require('./data/infrastructure/database');
-const usersRepositoryFactory = require('./data/repositories/users/usersRepository');
+const usersRepositoryFactory = require('./data/repositories/users/repository');
 const usersServiceFactory = require('./domain/users/service');
 const {
   databaseUri,
@@ -51,20 +52,14 @@ exports.handler = async function createUser(event, context) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        ...userResponse,
+        data: {
+          ...userResponse,
+        },
       }),
     };
   } catch (error) {
-    logging.error('Error: ', error);
+    logging.error('Create user error: ', error);
     await database.close(database);
-    return {
-      statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        error: error.message || 'Error when create user',
-      }),
-    };
+    return errorHandler(error);
   }
 };

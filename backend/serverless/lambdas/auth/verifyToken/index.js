@@ -1,7 +1,7 @@
 const logging = require('./common/logging');
 const authenticationMiddlewareFactory = require('./presentation/middleware/authentication');
 const tokenServiceFactory = require('./domain/token/service');
-const tokenRepositoryFactory = require('./data/repositories/token/tokenRepository');
+const tokenRepositoryFactory = require('./data/repositories/token/repository');
 
 const authenticationMiddleware = authenticationMiddlewareFactory.init();
 const tokenRepository = tokenRepositoryFactory.init();
@@ -45,17 +45,18 @@ exports.handler = async function verifyTokenHandler(event, context) {
     const decodedToken = await tokenService.verifyToken(tokenValue);
     if (!decodedToken) {
       return generateResponse(false, {
-        AuthInfo: 'Deny',
+        authInfo: 'Deny Access',
       });
     }
     return generateResponse(true, {
-      AuthInfo: 'Allow',
-      UserId: decodedToken.userId,
-      Roles: decodedToken.roles,
+      authInfo: 'Allow Access',
+      id: decodedToken.id,
+      userId: decodedToken.userId,
+      roles: decodedToken.roles,
     });
   } catch (error) {
     return generateResponse(false, {
-      AuthInfo: 'Deny',
+      authInfo: 'Deny Access',
     });
   }
 };

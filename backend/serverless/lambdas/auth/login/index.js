@@ -1,8 +1,8 @@
 const logging = require('./common/logging');
 const validations = require('./presentation/middleware/validations');
 const databaseFactory = require('./data/infrastructure/database');
-const tokenRepositoryFactory = require('./data/repositories/token/tokenRepository');
-const usersRepositoryFactory = require('./data/repositories/users/usersRepository');
+const tokenRepositoryFactory = require('./data/repositories/token/repository');
+const usersRepositoryFactory = require('./data/repositories/users/repository');
 const authServiceFactory = require('./domain/auth/service');
 const {
   databaseUri,
@@ -44,7 +44,9 @@ exports.handler = async function loginHandler(event, context) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        token,
+        data: {
+          token,
+        },
       }),
     };
   } catch (error) {
