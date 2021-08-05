@@ -23,7 +23,8 @@ function init({
         throw new Error(WRONG_PASSWORD_ERROR_MESSAGE);
       }
       return tokenRepository.createUserToken({
-        userId: user.id,
+        id: user.id,
+        userId: user.userId,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,

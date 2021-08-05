@@ -140,32 +140,6 @@ module "rds_postgresql" {
   }
 }
 
-# ################################################################################
-# # Database Proxy Configuration
-# ################################################################################
-# resource "aws_db_proxy" "example" {
-#   name                   = "rds_postgresql_proxy"
-#   debug_logging          = true
-#   engine_family          = "POSTGRESQL"
-#   idle_client_timeout    = 1800
-#   require_tls            = true
-#   role_arn               = aws_iam_role.example.arn
-#   vpc_security_group_ids = [aws_security_group.example.id]
-#   vpc_subnet_ids         = [aws_subnet.example.id]
-
-#   auth {
-#     auth_scheme = "SECRETS"
-#     description = "example"
-#     iam_auth    = "DISABLED"
-#     secret_arn  = aws_secretsmanager_secret.example.arn
-#   }
-
-#   tags = {
-#     Name = "example"
-#     Key  = "value"
-#   }
-# }
-
 ################################################################################
 # Lambdas Layer Configuration
 ################################################################################

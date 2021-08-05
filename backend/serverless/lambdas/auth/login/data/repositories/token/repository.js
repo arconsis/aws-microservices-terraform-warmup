@@ -33,6 +33,7 @@ module.exports.init = function init() {
   }
 
   async function createUserToken({
+    id,
     userId,
     email,
     firstName,
@@ -44,11 +45,12 @@ module.exports.init = function init() {
     const token = {
       accessToken: jwt.sign(
         {
+          id,
+          userId,
           email,
           firstName,
           lastName,
           userName,
-          userId,
           roles: ['user'],
         },
         jwtSecret,

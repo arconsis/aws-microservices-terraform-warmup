@@ -1,6 +1,7 @@
 class User {
   constructor({
     id,
+    userId,
     firstName,
     lastName,
     userName,
@@ -9,6 +10,7 @@ class User {
     createdAt,
   } = {}) {
     this.id = id;
+    this.userId = userId;
     this.firstName = firstName;
     this.lastName = lastName;
     this.userName = userName;
