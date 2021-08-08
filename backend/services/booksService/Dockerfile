@@ -1,29 +1,20 @@
 FROM node:14-alpine as builder
-ARG NPM_TOKEN
-RUN mkdir -p /build
 
-COPY ./package.json ./package-lock.json /build/
-WORKDIR /build
-RUN npm install && \
-    rm -f .npmrc
+WORKDIR /usr/src/app
 
-# Bundle app source
-COPY . /build
+COPY package*.json ./
+RUN npm ci
+
+COPY src ./
 
 FROM node:14-alpine
-# user with username node is provided from the official node image
-ENV user node
-# Run the image as a non-root user
-USER $user
 
-# Create app directory
-RUN mkdir -p /home/$user/booksservice/src
-WORKDIR /home/$user/booksservice/src
+WORKDIR /usr/src/app
+COPY --from=builder /usr/src/app ./
 
-COPY --from=builder /build ./
-
-EXPOSE 5000
+USER node
+EXPOSE $PORT
 
 ENV NODE_ENV production
 
-CMD ["npm", "start"]
+CMD ["node", "index.js"]
