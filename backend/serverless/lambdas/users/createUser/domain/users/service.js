@@ -1,3 +1,7 @@
+const {
+  USER_ROLE,
+} = require('../../common/constants');
+
 function init({
   usersRepository,
 }) {
@@ -14,6 +18,7 @@ function init({
       userName,
       email,
       password,
+      roles: [USER_ROLE],
     });
   }
 
@@ -21,6 +26,5 @@ function init({
     createUser,
   };
 }
-
 
 module.exports.init = init;

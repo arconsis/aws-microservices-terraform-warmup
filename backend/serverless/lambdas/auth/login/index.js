@@ -54,7 +54,7 @@ exports.handler = async function loginHandler(event, context) {
       ? error.message
       : 'Error on login process';
     return {
-      statusCode: 200,
+      statusCode: 500,
       headers: {
         'Content-Type': 'application/json',
       },

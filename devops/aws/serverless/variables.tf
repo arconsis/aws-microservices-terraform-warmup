@@ -86,10 +86,22 @@ variable "database_password" {
 }
 
 ################################################################################
-# General Configuration
+# Auth Configuration
 ################################################################################
 variable "jwt_secret" {
   description = "The jwt secret we use to generate json web token"
+  type        = string
+  sensitive   = true
+}
+
+variable "basic_auth_username" {
+  description = "The basic auth username"
+  type        = string
+  sensitive   = true
+}
+
+variable "basic_auth_password" {
+  description = "The basic auth password"
   type        = string
   sensitive   = true
 }

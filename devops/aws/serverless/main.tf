@@ -215,6 +215,43 @@ module "auth" {
   }
 }
 
+module "basic_auth" {
+  source = "terraform-aws-modules/lambda/aws"
+
+  function_name = "basic_auth"
+  description   = "Verifies basic authentication"
+  handler       = "index.handler"
+  runtime       = "nodejs14.x"
+  publish       = true
+
+  source_path = "../../../backend/serverless/lambdas/auth/verifyBasicAuth"
+
+  store_on_s3 = true
+  s3_bucket   = "my-bucket-id-with-lambda-builds"
+
+  vpc_subnet_ids         = module.networking.private_subnet_ids
+  vpc_security_group_ids = [module.private_vpc_sg.security_group_id]
+  attach_network_policy = true
+
+  allowed_triggers = {
+    AllowExecutionFromAPIGateway = {
+      service    = "apigateway"
+      source_arn = "${module.api_gateway.apigatewayv2_api_execution_arn}/*/*/*"
+    }
+  }
+
+  attach_dead_letter_policy = false
+  
+  layers = [
+    module.lambda_layer_logging.lambda_layer_arn
+  ]
+
+  environment_variables = {
+    BASIC_AUTH_USERNAME = var.basic_auth_username
+    BASIC_AUTH_PASSWORD = var.basic_auth_password
+  }
+}
+
 module "login" {
   source = "terraform-aws-modules/lambda/aws"
 
@@ -255,6 +292,52 @@ module "login" {
     DB_USER = module.rds_postgresql.db_instance_username,
     DB_PASS = module.rds_postgresql.db_master_password,
     JWT_SECRET = var.jwt_secret
+  }
+}
+################################################################################
+# ADMINS
+################################################################################
+module "create_admin_lambda" {
+  source = "terraform-aws-modules/lambda/aws"
+
+  function_name = "create-admin"
+  description   = "Create new admin"
+  handler       = "index.handler"
+  runtime       = "nodejs14.x"
+  publish       = true
+  timeout       = 60
+
+  source_path = "../../../backend/serverless/lambdas/admins/createAdmin"
+
+  store_on_s3 = true
+  s3_bucket   = "my-bucket-id-with-lambda-builds"
+
+  vpc_subnet_ids         = module.networking.private_subnet_ids
+  vpc_security_group_ids = [module.private_vpc_sg.security_group_id]
+  attach_network_policy = true
+
+  allowed_triggers = {
+    AllowExecutionFromAPIGateway = {
+      service    = "apigateway"
+      source_arn = "${module.api_gateway.apigatewayv2_api_execution_arn}/*/*/*"
+    }
+  }
+
+  attach_dead_letter_policy = false
+
+  layers = [
+    module.lambda_layer_logging.lambda_layer_arn,
+    module.lambda_layer_database.lambda_layer_arn
+  ]
+
+  depends_on = [module.rds_postgresql]
+
+  environment_variables = {
+    DB_HOST = module.rds_postgresql.db_instance_address,
+    DB_PORT = module.rds_postgresql.db_instance_port,
+    DB_NAME = module.rds_postgresql.db_instance_name,
+    DB_USER = module.rds_postgresql.db_instance_username,
+    DB_PASS = module.rds_postgresql.db_master_password,
   }
 }
 ################################################################################
@@ -413,10 +496,20 @@ module "api_gateway" {
       timeout_milliseconds   = 12000
     }
 
+    "POST /admins" = {
+      lambda_arn             = module.create_admin_lambda.lambda_function_invoke_arn
+      payload_format_version = "2.0"
+      timeout_milliseconds   = 12000
+      authorization_type     = "CUSTOM"
+      authorizer_id          = aws_apigatewayv2_authorizer.basic_auth.id
+    }
+
     "POST /users" = {
       lambda_arn             = module.create_user_lambda.lambda_function_invoke_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
+      authorization_type     = "CUSTOM"
+      authorizer_id          = aws_apigatewayv2_authorizer.auth.id
     }
 
     "GET /users" = {
@@ -448,6 +541,9 @@ resource "aws_iam_role" "invocation_role" {
   assume_role_policy = file("../common/templates/policies/api_gateway_auth_invocation.json.tpl")
 }
 
+################################################################################
+# API GW Authorizer Configuration
+################################################################################
 resource "aws_iam_role_policy" "invocation_policy" {
   name = "default"
   role = aws_iam_role.invocation_role.id
@@ -472,6 +568,35 @@ resource "aws_apigatewayv2_authorizer" "auth" {
   identity_sources = ["$request.header.Authorization"]
   name             = "LambdaAuthorizer"
   authorizer_uri   = module.auth.lambda_function_invoke_arn
+  authorizer_payload_format_version = "2.0"
+  enable_simple_responses = true
+  authorizer_credentials_arn = aws_iam_role.invocation_role.arn
+}
+
+resource "aws_iam_role_policy" "basic_auth_invocation_policy" {
+  name = "basic_auth_invocation_policy"
+  role = aws_iam_role.invocation_role.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "lambda:InvokeFunction",
+      "Effect": "Allow",
+      "Resource": "${module.basic_auth.lambda_function_arn}"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_apigatewayv2_authorizer" "basic_auth" {
+  api_id           = module.api_gateway.apigatewayv2_api_id
+  authorizer_type  = "REQUEST"
+  identity_sources = ["$request.header.Authorization"]
+  name             = "LambdaBasicAuthorizer"
+  authorizer_uri   = module.basic_auth.lambda_function_invoke_arn
   authorizer_payload_format_version = "2.0"
   enable_simple_responses = true
   authorizer_credentials_arn = aws_iam_role.invocation_role.arn

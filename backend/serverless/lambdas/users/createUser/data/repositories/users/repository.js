@@ -9,6 +9,7 @@ module.exports.init = ({ dataStores }) => {
       userName,
       email,
       password,
+      roles,
     }) {
       const userDoc = await usersDataStore.createUser({
         firstName,
@@ -16,6 +17,7 @@ module.exports.init = ({ dataStores }) => {
         userName,
         email,
         password,
+        roles,
       });
       return userDoc
         ? mapper.toDomainModel(userDoc)

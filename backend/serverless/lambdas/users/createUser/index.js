@@ -7,11 +7,9 @@ const usersServiceFactory = require('./domain/users/service');
 const {
   databaseUri,
 } = require('./configuration');
-
-// const closeConnection = async (db) => {
-//   await db.sequelize.connectionManager.pool.drain();
-//   return db.sequelize.connectionManager.pool.destroyAllNow()
-// };
+const {
+  isAbleToCreateUser,
+} = require('./presentation/middleware/authorization');
 
 function getPayloadAsJSON(event) {
   try {
@@ -36,6 +34,7 @@ exports.handler = async function createUser(event, context) {
     if (!event || !event.body) {
       throw new Error('Event not found');
     }
+    isAbleToCreateUser(event);
     const decodedEvent = getPayloadAsJSON(event);
     validations.assertCreateUserPayload(decodedEvent);
     const userResponse = await usersService.createUser({

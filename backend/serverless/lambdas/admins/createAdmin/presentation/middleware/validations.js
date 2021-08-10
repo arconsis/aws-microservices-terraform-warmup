@@ -16,6 +16,9 @@ function assertCreateAdminPayload(payload) {
   if (!payload.lastName) {
     throw new Error('lastName not provided. Make sure you have a "lastName" property in your request body.');
   }
+  if (!payload.userName) {
+    throw new Error('userName not provided. Make sure you have a "userName" property in your request body.');
+  }
 }
 
 module.exports = {

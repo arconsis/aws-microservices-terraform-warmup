@@ -10,6 +10,14 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^10.0.0",
-    "throw-http-errors": "^2.0.0"
+    "throw-http-errors": "^2.0.0",
+    "validator": "^13.6.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.12.0",
+    "eslint-config-airbnb": "^15.1.0",
+    "eslint-plugin-import": "^2.17.2",
+    "eslint-plugin-jsx-a11y": "^6.2.1",
+    "eslint-plugin-react": "^7.13.0"
   }
 }

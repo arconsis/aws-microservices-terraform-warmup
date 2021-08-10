@@ -4,6 +4,7 @@ class Admin {
     adminId,
     firstName,
     lastName,
+    username,
     email,
     createdAt,
   } = {}) {
@@ -11,6 +12,7 @@ class Admin {
     this.adminId = adminId;
     this.firstName = firstName;
     this.lastName = lastName;
+    this.username = username;
     this.email = email;
     this.createdAt = createdAt;
   }

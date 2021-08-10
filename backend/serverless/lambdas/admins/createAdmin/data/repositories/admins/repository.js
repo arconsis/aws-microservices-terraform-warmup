@@ -1,22 +1,26 @@
 const mapper = require('./mapper');
 
 module.exports.init = ({ dataStores }) => {
-  const { adminsDataStore } = dataStores;
+  const { usersDataStore } = dataStores;
   const adminsRepository = {
     async createAdmin({
       firstName,
       lastName,
+      userName,
       email,
       password,
+      roles,
     }) {
-      const adminDoc = await adminsDataStore.createUser({
+      const userDoc = await usersDataStore.createUser({
         firstName,
         lastName,
+        userName,
         email,
         password,
+        roles,
       });
-      return adminDoc
-        ? mapper.toDomainModel(adminDoc)
+      return userDoc
+        ? mapper.toDomainModel(userDoc)
         : null;
     },
   };

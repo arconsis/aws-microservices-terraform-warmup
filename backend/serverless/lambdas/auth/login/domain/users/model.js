@@ -7,6 +7,7 @@ class User {
     userName,
     email,
     password,
+    roles,
     createdAt,
   } = {}) {
     this.id = id;
@@ -16,6 +17,7 @@ class User {
     this.userName = userName;
     this.email = email;
     this.password = password;
+    this.roles = roles;
     this.createdAt = createdAt;
   }
 }

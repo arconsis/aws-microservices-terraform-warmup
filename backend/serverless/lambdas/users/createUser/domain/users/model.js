@@ -6,6 +6,7 @@ class User {
     lastName,
     userName,
     email,
+    roles,
     createdAt,
   } = {}) {
     this.id = id;
@@ -14,6 +15,7 @@ class User {
     this.lastName = lastName;
     this.userName = userName;
     this.email = email;
+    this.roles = roles;
     this.createdAt = createdAt;
   }
 }
