@@ -39,9 +39,10 @@ module.exports.init = function init() {
     firstName,
     lastName,
     userName,
+    roles,
     expiresIn = TOKEN_EXPIRATION,
   }) {
-    logging.log('Create user token called');
+    logging.log(`Create user token called for roles: ${roles}`);
     const token = {
       accessToken: jwt.sign(
         {
@@ -51,14 +52,14 @@ module.exports.init = function init() {
           firstName,
           lastName,
           userName,
-          roles: ['user'],
+          roles,
         },
         jwtSecret,
         {
           expiresIn,
         },
       ),
-      roles: ['user'],
+      roles,
     };
     return mapper.toDomainModel(token);
   }

@@ -42,5 +42,6 @@ function isAbleToFetchSpecificUser(event) {
 
 module.exports = {
   isAbleToFetchSpecificUser,
+  getUserIdFromPath,
   getIdFromRequestContext,
 };

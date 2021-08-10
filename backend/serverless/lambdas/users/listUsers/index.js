@@ -20,7 +20,7 @@ exports.handler = async function listUsers(event, context) {
       usersRepository,
     });
     isAbleToListUsers(event);
-    const users = await usersService.list({});
+    const users = await usersService.listUsers({});
     return {
       statusCode: 200,
       headers: {
@@ -28,7 +28,7 @@ exports.handler = async function listUsers(event, context) {
       },
       body: JSON.stringify({
         data: {
-          ...users
+          ...users,
         },
       }),
     };

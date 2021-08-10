@@ -1,3 +1,7 @@
+const {
+  ADMIN_ROLE,
+} = require('../../common/constants');
+
 function init({
   adminsRepository,
 }) {
@@ -6,12 +10,15 @@ function init({
     lastName,
     email,
     password,
+    userName,
   }) {
     return adminsRepository.createAdmin({
       firstName,
       lastName,
+      userName,
       email,
       password,
+      roles: [ADMIN_ROLE],
     });
   }
 

@@ -1,9 +1,11 @@
 const logging = require('./common/logging');
-const validations = require('./presentation/middleware/validations');
 const errorHandler = require('./presentation/middleware/errors');
 const databaseFactory = require('./data/infrastructure/database');
 const adminsRepositoryFactory = require('./data/repositories/admins/repository');
 const adminsServiceFactory = require('./domain/admins/service');
+const {
+  assertCreateAdminPayload,
+} = require('./presentation/middleware/validations');
 const {
   databaseUri,
 } = require('./configuration');
@@ -27,19 +29,18 @@ exports.handler = async function createAdmin(event, context) {
   });
   try {
     await database.authenticate();
-    await database.sync();
-    await new Promise(resolve => setTimeout(resolve, 5000));
     logging.log('Connection has been established successfully.');
     if (!event || !event.body) {
       throw new Error('Event not found');
     }
     const payload = getPayloadAsJSON(event);
-    validations.assertCreateUserPayload(payload);
+    assertCreateAdminPayload(payload);
     const userResponse = await adminsService.createAdmin({
       firstName: payload.firstName,
       lastName: payload.lastName,
       email: payload.email,
       password: payload.password,
+      userName: payload.userName,
     });
     await database.close();
     return {

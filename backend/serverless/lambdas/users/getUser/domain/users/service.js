@@ -1,9 +1,9 @@
 function init({
   usersRepository,
 }) {
-  async function getUser(id) {
+  async function getUser(userId) {
     return usersRepository.getUser({
-      id,
+      userId,
     });
   }
 

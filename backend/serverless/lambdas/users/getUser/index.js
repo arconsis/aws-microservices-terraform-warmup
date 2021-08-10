@@ -6,7 +6,7 @@ const {
   databaseUri,
 } = require('./configuration');
 const {
-  getIdFromRequestContext,
+  getUserIdFromPath,
   isAbleToFetchSpecificUser,
 } = require('./presentation/middleware/authorization');
 
@@ -21,9 +21,9 @@ exports.handler = async function getUser(event, context) {
       usersRepository,
     });
     isAbleToFetchSpecificUser(event);
-    const id = getIdFromRequestContext(event);
-    logger.log(`Try find user with pk id: ${id}`);
-    const user = await usersService.getUser(id);
+    const userId = getUserIdFromPath(event);
+    logger.log(`Try find user with userid: ${userId}`);
+    const user = await usersService.getUser(userId);
     return {
       statusCode: 200,
       headers: {
