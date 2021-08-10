@@ -85,7 +85,7 @@ variable "service_aws_logs_group" {
 }
 
 variable "service_port" {
-  description = "Port exposed by the books image"
+  description = "Port exposed by the docker image"
 }
 
 variable "service_desired_count" {
