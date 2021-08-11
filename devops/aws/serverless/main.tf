@@ -295,7 +295,7 @@ module "login" {
   }
 }
 ################################################################################
-# ADMINS
+# ADMINS Lambdas
 ################################################################################
 module "create_admin_lambda" {
   source = "terraform-aws-modules/lambda/aws"
@@ -341,7 +341,7 @@ module "create_admin_lambda" {
   }
 }
 ################################################################################
-# USERS
+# USERS Lambdas
 ################################################################################
 module "create_user_lambda" {
   source = "terraform-aws-modules/lambda/aws"
@@ -470,6 +470,96 @@ module "list_users_lambda" {
     DB_PASS = module.rds_postgresql.db_master_password,
   }
 }
+################################################################################
+# POSTS Lambdas
+################################################################################
+module "create_post_lambda" {
+  source = "terraform-aws-modules/lambda/aws"
+
+  function_name = "create-post"
+  description   = "Create new post for user"
+  handler       = "index.handler"
+  runtime       = "nodejs14.x"
+  publish       = true
+  timeout       = 60
+
+  source_path = "../../../backend/serverless/lambdas/posts/createPost"
+
+  store_on_s3 = true
+  s3_bucket   = "my-bucket-id-with-lambda-builds"
+
+  vpc_subnet_ids         = module.networking.private_subnet_ids
+  vpc_security_group_ids = [module.private_vpc_sg.security_group_id]
+  attach_network_policy = true
+
+  allowed_triggers = {
+    AllowExecutionFromAPIGateway = {
+      service    = "apigateway"
+      source_arn = "${module.api_gateway.apigatewayv2_api_execution_arn}/*/*/*"
+    }
+  }
+
+  attach_dead_letter_policy = false
+
+  layers = [
+    module.lambda_layer_logging.lambda_layer_arn,
+    module.lambda_layer_database.lambda_layer_arn
+  ]
+
+  depends_on = [module.rds_postgresql]
+
+  environment_variables = {
+    DB_HOST = module.rds_postgresql.db_instance_address,
+    DB_PORT = module.rds_postgresql.db_instance_port,
+    DB_NAME = module.rds_postgresql.db_instance_name,
+    DB_USER = module.rds_postgresql.db_instance_username,
+    DB_PASS = module.rds_postgresql.db_master_password,
+  }
+}
+
+module "list_user_posts_lambda" {
+  source = "terraform-aws-modules/lambda/aws"
+
+  function_name = "list-users-post"
+  description   = "List user posts"
+  handler       = "index.handler"
+  runtime       = "nodejs14.x"
+  publish       = true
+  timeout       = 60
+
+  source_path = "../../../backend/serverless/lambdas/posts/listPosts"
+
+  store_on_s3 = true
+  s3_bucket   = "my-bucket-id-with-lambda-builds"
+
+  vpc_subnet_ids         = module.networking.private_subnet_ids
+  vpc_security_group_ids = [module.private_vpc_sg.security_group_id]
+  attach_network_policy = true
+
+  allowed_triggers = {
+    AllowExecutionFromAPIGateway = {
+      service    = "apigateway"
+      source_arn = "${module.api_gateway.apigatewayv2_api_execution_arn}/*/*/*"
+    }
+  }
+
+  attach_dead_letter_policy = false
+
+  layers = [
+    module.lambda_layer_logging.lambda_layer_arn,
+    module.lambda_layer_database.lambda_layer_arn
+  ]
+
+  depends_on = [module.rds_postgresql]
+
+  environment_variables = {
+    DB_HOST = module.rds_postgresql.db_instance_address,
+    DB_PORT = module.rds_postgresql.db_instance_port,
+    DB_NAME = module.rds_postgresql.db_instance_name,
+    DB_USER = module.rds_postgresql.db_instance_username,
+    DB_PASS = module.rds_postgresql.db_master_password,
+  }
+}
 
 ################################################################################
 # API GW Configuration
@@ -490,12 +580,13 @@ module "api_gateway" {
   create_api_domain_name = false
   # Routes and integrations
   integrations = {
+    # Auth
     "POST /login" = {
       lambda_arn             = module.login.lambda_function_invoke_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
     }
-
+    # Admins
     "POST /admins" = {
       lambda_arn             = module.create_admin_lambda.lambda_function_invoke_arn
       payload_format_version = "2.0"
@@ -503,7 +594,7 @@ module "api_gateway" {
       authorization_type     = "CUSTOM"
       authorizer_id          = aws_apigatewayv2_authorizer.basic_auth.id
     }
-
+    # Users
     "POST /users" = {
       lambda_arn             = module.create_user_lambda.lambda_function_invoke_arn
       payload_format_version = "2.0"
@@ -511,7 +602,6 @@ module "api_gateway" {
       authorization_type     = "CUSTOM"
       authorizer_id          = aws_apigatewayv2_authorizer.auth.id
     }
-
     "GET /users" = {
       lambda_arn             = module.list_users_lambda.lambda_function_invoke_arn
       payload_format_version = "2.0"
@@ -519,9 +609,23 @@ module "api_gateway" {
       authorization_type     = "CUSTOM"
       authorizer_id          = aws_apigatewayv2_authorizer.auth.id
     }
-
     "GET /users/{userId}" = {
       lambda_arn             = module.get_user_lambda.lambda_function_invoke_arn
+      payload_format_version = "2.0"
+      timeout_milliseconds   = 12000
+      authorization_type     = "CUSTOM"
+      authorizer_id          = aws_apigatewayv2_authorizer.auth.id
+    }
+    # Posts
+    "POST /users/{userId}/posts" = {
+      lambda_arn             = module.create_post_lambda.lambda_function_invoke_arn
+      payload_format_version = "2.0"
+      timeout_milliseconds   = 12000
+      authorization_type     = "CUSTOM"
+      authorizer_id          = aws_apigatewayv2_authorizer.auth.id
+    }
+    "GET /users/{userId}/posts" = {
+      lambda_arn             = module.list_user_posts_lambda.lambda_function_invoke_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
       authorization_type     = "CUSTOM"
