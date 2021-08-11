@@ -5,7 +5,7 @@ const helmet = require('helmet');
 const compress = require('compression')();
 const useragent = require('express-useragent');
 
-if(process.env.NODE_ENV != 'production'){
+if(process.env.NODE_ENV !== 'production'){
   require('dotenv').config()
 }
 
