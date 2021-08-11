@@ -31,7 +31,7 @@ RUN gradle -b /usr/src/app/build.gradle.kts clean quarkusBuild
 
 
 ## Stage 2 : create the docker final image
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.3
+FROM redhat/ubi8-minimal:8.4
 
 ARG JAVA_PACKAGE=java-11-openjdk-headless
 ARG RUN_JAVA_VERSION=1.3.8
