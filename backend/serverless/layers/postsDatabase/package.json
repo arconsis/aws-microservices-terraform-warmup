@@ -1,7 +1,7 @@
 {
-  "name": "database",
+  "name": "postsdatabase",
   "version": "1.0.0",
-  "description": "Users database models and exported methods for lambdas",
+  "description": "Database for posts",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -14,5 +14,12 @@
     "pg": "^8.7.1",
     "pg-hstore": "^2.3.4",
     "sequelize": "5.21.10"
+  },
+  "devDependencies": {
+    "eslint": "^5.12.0",
+    "eslint-config-airbnb": "^15.1.0",
+    "eslint-plugin-import": "^2.17.2",
+    "eslint-plugin-jsx-a11y": "^6.2.1",
+    "eslint-plugin-react": "^7.13.0"
   }
 }
