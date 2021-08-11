@@ -140,6 +140,70 @@ module "rds_postgresql" {
   }
 }
 
+module "posts_database" {
+  source = "terraform-aws-modules/rds/aws"
+
+  identifier = "posts-database"
+
+  # All available versions: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html#PostgreSQL.Concepts
+  engine               = "postgres"
+  engine_version       = "11.10"
+  family               = "postgres11" # DB parameter group
+  major_engine_version = "11"         # DB option group
+  instance_class       = "db.t3.small"
+
+  allocated_storage     = 20
+  max_allocated_storage = 100
+  storage_encrypted     = false
+
+  # NOTE: Do NOT use 'user' as the value for 'username' as it throws:
+  # "Error creating DB Instance: InvalidParameterValue: MasterUsername
+  # user cannot be used as it is a reserved word used by the engine"
+  name     = "postgres"
+  username = var.posts_database_username
+  password = var.posts_database_password
+  port     = 5432
+
+  multi_az               = true
+  subnet_ids             = module.networking.private_subnet_ids
+  vpc_security_group_ids = [module.private_vpc_sg.security_group_id]
+
+  maintenance_window              = "Mon:00:00-Mon:03:00"
+  backup_window                   = "03:00-06:00"
+  enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
+
+  backup_retention_period = 0
+  skip_final_snapshot     = true
+  deletion_protection     = false
+
+  performance_insights_enabled          = true
+  performance_insights_retention_period = 7
+  create_monitoring_role                = true
+  monitoring_role_name                  = "PostsDatabaseMonitoringRole"
+  monitoring_interval                   = 60
+
+  parameters = [
+    {
+      name  = "autovacuum"
+      value = 1
+    },
+    {
+      name  = "client_encoding"
+      value = "utf8"
+    }
+  ]
+
+  db_option_group_tags = {
+    "Sensitive" = "low"
+  }
+  db_parameter_group_tags = {
+    "Sensitive" = "low"
+  }
+  db_subnet_group_tags = {
+    "Sensitive" = "high"
+  }
+}
+
 ################################################################################
 # Lambdas Layer Configuration
 ################################################################################
@@ -168,6 +232,21 @@ module "lambda_layer_database" {
   compatible_runtimes = ["nodejs14.x"]
 
   source_path = "../../../backend/serverless/layers/database"
+
+  store_on_s3 = true
+  s3_bucket   = "my-bucket-id-with-lambda-builds"
+}
+
+module "lambda_layer_posts_database" {
+  source = "terraform-aws-modules/lambda/aws"
+
+  create_layer = true
+
+  layer_name          = "lambda-layer-post-database"
+  description         = "Handle lambdas post database integration"
+  compatible_runtimes = ["nodejs14.x"]
+
+  source_path = "../../../backend/serverless/layers/postsDatabase"
 
   store_on_s3 = true
   s3_bucket   = "my-bucket-id-with-lambda-builds"
@@ -503,17 +582,17 @@ module "create_post_lambda" {
 
   layers = [
     module.lambda_layer_logging.lambda_layer_arn,
-    module.lambda_layer_database.lambda_layer_arn
+    module.lambda_layer_posts_database.lambda_layer_arn
   ]
 
-  depends_on = [module.rds_postgresql]
+  depends_on = [module.posts_database]
 
   environment_variables = {
-    DB_HOST = module.rds_postgresql.db_instance_address,
-    DB_PORT = module.rds_postgresql.db_instance_port,
-    DB_NAME = module.rds_postgresql.db_instance_name,
-    DB_USER = module.rds_postgresql.db_instance_username,
-    DB_PASS = module.rds_postgresql.db_master_password,
+    DB_HOST = module.posts_database.db_instance_address,
+    DB_PORT = module.posts_database.db_instance_port,
+    DB_NAME = module.posts_database.db_instance_name,
+    DB_USER = module.posts_database.db_instance_username,
+    DB_PASS = module.posts_database.db_master_password,
   }
 }
 
@@ -547,17 +626,17 @@ module "list_user_posts_lambda" {
 
   layers = [
     module.lambda_layer_logging.lambda_layer_arn,
-    module.lambda_layer_database.lambda_layer_arn
+    module.lambda_layer_posts_database.lambda_layer_arn
   ]
 
-  depends_on = [module.rds_postgresql]
+  depends_on = [module.posts_database]
 
   environment_variables = {
-    DB_HOST = module.rds_postgresql.db_instance_address,
-    DB_PORT = module.rds_postgresql.db_instance_port,
-    DB_NAME = module.rds_postgresql.db_instance_name,
-    DB_USER = module.rds_postgresql.db_instance_username,
-    DB_PASS = module.rds_postgresql.db_master_password,
+    DB_HOST = module.posts_database.db_instance_address,
+    DB_PORT = module.posts_database.db_instance_port,
+    DB_NAME = module.posts_database.db_instance_name,
+    DB_USER = module.posts_database.db_instance_username,
+    DB_PASS = module.posts_database.db_master_password,
   }
 }
 

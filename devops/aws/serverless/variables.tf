@@ -85,6 +85,18 @@ variable "database_password" {
   sensitive   = true
 }
 
+variable "posts_database_username" {
+  description = "The password for the posts DB master user"
+  type        = string
+  sensitive   = true
+}
+
+variable "posts_database_password" {
+  description = "The password for the posts DB master user"
+  type        = string
+  sensitive   = true
+}
+
 ################################################################################
 # Auth Configuration
 ################################################################################
