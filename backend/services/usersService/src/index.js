@@ -1,9 +1,13 @@
-const http = require('http');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const compress = require('compression')();
 const useragent = require('express-useragent');
+
+if(process.env.NODE_ENV !== 'production'){
+  require('dotenv').config()
+}
+
 const {
   recommendationsService: recommendationsServiceConfig
 } = require('./configuration');

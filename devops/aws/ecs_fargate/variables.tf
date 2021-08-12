@@ -158,7 +158,7 @@ variable "books_api_task_family" {
 
 variable "books_api_port" {
   description = "Port exposed by the books image"
-  default     = 5000
+  default     = 3000
 }
 
 variable "books_api_desired_count" {
@@ -338,7 +338,7 @@ variable "recommendations_api_task_family" {
 
 variable "recommendations_api_port" {
   description = "Port exposed by the recommendations image"
-  default     = 3333
+  default     = 3000
 }
 
 variable "recommendations_api_desired_count" {
