@@ -35,7 +35,8 @@ module "networking" {
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
   }
   private_subnet_additional_tags = {
-    "kubernetes.io/role/internal-elb" = "1"
+    "kubernetes.io/role/internal-elb"           = "1"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
   }
 }
 

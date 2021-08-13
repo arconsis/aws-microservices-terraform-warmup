@@ -29,7 +29,7 @@ variable "create_igw" {
 variable "single_nat_gateway" {
   description = "Flag to define if we need only one NAT GW"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "enable_nat_gateway" {
