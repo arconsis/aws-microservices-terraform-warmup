@@ -6,6 +6,11 @@ variable "aws_region" {
   default     = "eu-west-1"
 }
 
+variable "environment" {
+  description = "Indicate the environment"
+  default     = "dev"
+}
+
 ################################################################################
 # Network Configuration
 ################################################################################
@@ -73,26 +78,26 @@ variable "enable_dns_hostnames" {
 ################################################################################
 # https://blog.gruntwork.io/a-comprehensive-guide-to-managing-secrets-in-your-terraform-code-1d586955ace1
 # using environment variables
-variable "database_username" {
-  description = "The username for the DB master user"
+variable "users_database_username" {
+  description = "The username for the users DB master"
   type        = string
   sensitive   = true
 }
 
-variable "database_password" {
-  description = "The password for the DB master user"
+variable "users_database_password" {
+  description = "The password for the users DB master"
   type        = string
   sensitive   = true
 }
 
 variable "posts_database_username" {
-  description = "The password for the posts DB master user"
+  description = "The password for the posts DB master"
   type        = string
   sensitive   = true
 }
 
 variable "posts_database_password" {
-  description = "The password for the posts DB master user"
+  description = "The password for the posts DB master"
   type        = string
   sensitive   = true
 }

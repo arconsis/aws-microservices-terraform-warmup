@@ -77,10 +77,10 @@ module "private_vpc_sg" {
 #   }
 # }
 
-module "rds_postgresql" {
+module "users_database" {
   source = "terraform-aws-modules/rds/aws"
 
-  identifier = "db-postgres"
+  identifier = "users-database"
 
   # All available versions: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html#PostgreSQL.Concepts
   engine               = "postgres"
@@ -97,8 +97,8 @@ module "rds_postgresql" {
   # "Error creating DB Instance: InvalidParameterValue: MasterUsername
   # user cannot be used as it is a reserved word used by the engine"
   name     = "postgres"
-  username = var.database_username
-  password = var.database_password
+  username = var.users_database_username
+  password = var.users_database_password
   port     = 5432
 
   multi_az               = true
@@ -258,11 +258,11 @@ module "lambda_layer_posts_database" {
 ################################################################################
 # AUTH
 ################################################################################
-module "auth" {
+module "jwt_auth" {
   source = "terraform-aws-modules/lambda/aws"
 
-  function_name = "auth"
-  description   = "Verifies token"
+  function_name = "jwt_auth"
+  description   = "Verifies JWT"
   handler       = "index.handler"
   runtime       = "nodejs14.x"
   publish       = true
@@ -365,11 +365,11 @@ module "login" {
   ]
 
   environment_variables = {
-    DB_HOST = module.rds_postgresql.db_instance_address,
-    DB_PORT = module.rds_postgresql.db_instance_port,
-    DB_NAME = module.rds_postgresql.db_instance_name,
-    DB_USER = module.rds_postgresql.db_instance_username,
-    DB_PASS = module.rds_postgresql.db_master_password,
+    DB_HOST = module.users_database.db_instance_address,
+    DB_PORT = module.users_database.db_instance_port,
+    DB_NAME = module.users_database.db_instance_name,
+    DB_USER = module.users_database.db_instance_username,
+    DB_PASS = module.users_database.db_master_password,
     JWT_SECRET = var.jwt_secret
   }
 }
@@ -409,14 +409,14 @@ module "create_admin_lambda" {
     module.lambda_layer_database.lambda_layer_arn
   ]
 
-  depends_on = [module.rds_postgresql]
+  depends_on = [module.users_database]
 
   environment_variables = {
-    DB_HOST = module.rds_postgresql.db_instance_address,
-    DB_PORT = module.rds_postgresql.db_instance_port,
-    DB_NAME = module.rds_postgresql.db_instance_name,
-    DB_USER = module.rds_postgresql.db_instance_username,
-    DB_PASS = module.rds_postgresql.db_master_password,
+    DB_HOST = module.users_database.db_instance_address,
+    DB_PORT = module.users_database.db_instance_port,
+    DB_NAME = module.users_database.db_instance_name,
+    DB_USER = module.users_database.db_instance_username,
+    DB_PASS = module.users_database.db_master_password,
   }
 }
 ################################################################################
@@ -455,14 +455,14 @@ module "create_user_lambda" {
     module.lambda_layer_database.lambda_layer_arn
   ]
 
-  depends_on = [module.rds_postgresql]
+  depends_on = [module.users_database]
 
   environment_variables = {
-    DB_HOST = module.rds_postgresql.db_instance_address,
-    DB_PORT = module.rds_postgresql.db_instance_port,
-    DB_NAME = module.rds_postgresql.db_instance_name,
-    DB_USER = module.rds_postgresql.db_instance_username,
-    DB_PASS = module.rds_postgresql.db_master_password,
+    DB_HOST = module.users_database.db_instance_address,
+    DB_PORT = module.users_database.db_instance_port,
+    DB_NAME = module.users_database.db_instance_name,
+    DB_USER = module.users_database.db_instance_username,
+    DB_PASS = module.users_database.db_master_password,
   }
 }
 
@@ -500,11 +500,11 @@ module "get_user_lambda" {
   ]
 
   environment_variables = {
-    DB_HOST = module.rds_postgresql.db_instance_address,
-    DB_PORT = module.rds_postgresql.db_instance_port,
-    DB_NAME = module.rds_postgresql.db_instance_name,
-    DB_USER = module.rds_postgresql.db_instance_username,
-    DB_PASS = module.rds_postgresql.db_master_password,
+    DB_HOST = module.users_database.db_instance_address,
+    DB_PORT = module.users_database.db_instance_port,
+    DB_NAME = module.users_database.db_instance_name,
+    DB_USER = module.users_database.db_instance_username,
+    DB_PASS = module.users_database.db_master_password,
   }
 }
 
@@ -542,11 +542,11 @@ module "list_users_lambda" {
   ]
 
   environment_variables = {
-    DB_HOST = module.rds_postgresql.db_instance_address,
-    DB_PORT = module.rds_postgresql.db_instance_port,
-    DB_NAME = module.rds_postgresql.db_instance_name,
-    DB_USER = module.rds_postgresql.db_instance_username,
-    DB_PASS = module.rds_postgresql.db_master_password,
+    DB_HOST = module.users_database.db_instance_address,
+    DB_PORT = module.users_database.db_instance_port,
+    DB_NAME = module.users_database.db_instance_name,
+    DB_USER = module.users_database.db_instance_username,
+    DB_PASS = module.users_database.db_master_password,
   }
 }
 ################################################################################
@@ -646,7 +646,7 @@ module "list_user_posts_lambda" {
 module "api_gateway" {
   source = "terraform-aws-modules/apigateway-v2/aws"
 
-  name          = "dev-http"
+  name          = "main-GW-${var.environment}"
   description   = "HTTP API Gateway"
   protocol_type = "HTTP"
 
@@ -679,21 +679,21 @@ module "api_gateway" {
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
       authorization_type     = "CUSTOM"
-      authorizer_id          = aws_apigatewayv2_authorizer.auth.id
+      authorizer_id          = aws_apigatewayv2_authorizer.jwt_auth.id
     }
     "GET /users" = {
       lambda_arn             = module.list_users_lambda.lambda_function_invoke_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
       authorization_type     = "CUSTOM"
-      authorizer_id          = aws_apigatewayv2_authorizer.auth.id
+      authorizer_id          = aws_apigatewayv2_authorizer.jwt_auth.id
     }
     "GET /users/{userId}" = {
       lambda_arn             = module.get_user_lambda.lambda_function_invoke_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
       authorization_type     = "CUSTOM"
-      authorizer_id          = aws_apigatewayv2_authorizer.auth.id
+      authorizer_id          = aws_apigatewayv2_authorizer.jwt_auth.id
     }
     # Posts
     "POST /users/{userId}/posts" = {
@@ -701,14 +701,14 @@ module "api_gateway" {
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
       authorization_type     = "CUSTOM"
-      authorizer_id          = aws_apigatewayv2_authorizer.auth.id
+      authorizer_id          = aws_apigatewayv2_authorizer.jwt_auth.id
     }
     "GET /users/{userId}/posts" = {
       lambda_arn             = module.list_user_posts_lambda.lambda_function_invoke_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
       authorization_type     = "CUSTOM"
-      authorizer_id          = aws_apigatewayv2_authorizer.auth.id
+      authorizer_id          = aws_apigatewayv2_authorizer.jwt_auth.id
     }
   }
 
@@ -738,19 +738,19 @@ resource "aws_iam_role_policy" "invocation_policy" {
     {
       "Action": "lambda:InvokeFunction",
       "Effect": "Allow",
-      "Resource": "${module.auth.lambda_function_arn}"
+      "Resource": "${module.jwt_auth.lambda_function_arn}"
     }
   ]
 }
 EOF
 }
 
-resource "aws_apigatewayv2_authorizer" "auth" {
+resource "aws_apigatewayv2_authorizer" "jwt_auth" {
   api_id           = module.api_gateway.apigatewayv2_api_id
   authorizer_type  = "REQUEST"
   identity_sources = ["$request.header.Authorization"]
   name             = "LambdaAuthorizer"
-  authorizer_uri   = module.auth.lambda_function_invoke_arn
+  authorizer_uri   = module.jwt_auth.lambda_function_invoke_arn
   authorizer_payload_format_version = "2.0"
   enable_simple_responses = true
   authorizer_credentials_arn = aws_iam_role.invocation_role.arn
