@@ -30,6 +30,13 @@ module "networking" {
   availability_zones   = var.availability_zones
   public_subnet_cidrs  = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
+  public_subnet_additional_tags = {
+    "kubernetes.io/role/elb"                    = "1"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+  }
+  private_subnet_additional_tags = {
+    "kubernetes.io/role/internal-elb" = "1"
+  }
 }
 
 module "eks" {
@@ -93,6 +100,7 @@ resource "helm_release" "ingress" {
   chart      = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
   version    = "1.2.6"
+  namespace  = "kube-system"
 
   set {
     name  = "autoDiscoverAwsRegion"

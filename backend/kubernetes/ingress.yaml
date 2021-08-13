@@ -1,11 +1,12 @@
-apiVersion: networking.k8s.io/v1
+apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: backend-ingress
   namespace: tf-tutorial
   annotations:
-    alb.ingress.kubernetes.io/scheme: internet-facing
     kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: instance
 spec:
   rules:
     - http:

@@ -40,10 +40,13 @@ resource "aws_subnet" "private" {
   cidr_block        = element(var.private_subnet_cidrs, count.index)
   availability_zone = element(var.availability_zones, count.index)
   vpc_id            = local.vpc_id
-  tags = {
-    Name        = "${var.project}_${var.environment}_private_subnet"
-    Environment = var.environment
-  }
+  tags = merge(
+    var.public_subnet_additional_tags,
+    {
+      Name        = "${var.project}_${var.environment}_private_subnet"
+      Environment = var.environment
+    }
+  )
 }
 
 ################################################################################
@@ -56,10 +59,14 @@ resource "aws_subnet" "public" {
   availability_zone       = element(var.availability_zones, count.index)
   vpc_id                  = local.vpc_id
   map_public_ip_on_launch = true
-  tags = {
-    Name        = "${var.project}_${var.environment}_public_subnet"
-    Environment = var.environment
-  }
+  tags = merge(
+    var.public_subnet_additional_tags,
+    {
+      Name        = "${var.project}_${var.environment}_public_subnet"
+      Environment = var.environment
+
+    }
+  )
 }
 
 ################################################################################
