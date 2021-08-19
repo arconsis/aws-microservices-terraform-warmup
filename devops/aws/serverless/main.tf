@@ -222,16 +222,16 @@ module "lambda_layer_logging" {
   s3_bucket   = "my-bucket-id-with-lambda-builds"
 }
 
-module "lambda_layer_database" {
+module "lambda_layer_users_database" {
   source = "terraform-aws-modules/lambda/aws"
 
   create_layer = true
 
-  layer_name          = "lambda-layer-database"
+  layer_name          = "lambda-layer-users-database"
   description         = "Handle lambdas database integration"
   compatible_runtimes = ["nodejs14.x"]
 
-  source_path = "../../../backend/serverless/layers/database"
+  source_path = "../../../backend/serverless/layers/usersDatabase"
 
   store_on_s3 = true
   s3_bucket   = "my-bucket-id-with-lambda-builds"
@@ -361,7 +361,7 @@ module "login" {
   
   layers = [
     module.lambda_layer_logging.lambda_layer_arn,
-    module.lambda_layer_database.lambda_layer_arn
+    module.lambda_layer_users_database.lambda_layer_arn
   ]
 
   environment_variables = {
@@ -406,7 +406,7 @@ module "create_admin_lambda" {
 
   layers = [
     module.lambda_layer_logging.lambda_layer_arn,
-    module.lambda_layer_database.lambda_layer_arn
+    module.lambda_layer_users_database.lambda_layer_arn
   ]
 
   depends_on = [module.users_database]
@@ -452,7 +452,7 @@ module "create_user_lambda" {
 
   layers = [
     module.lambda_layer_logging.lambda_layer_arn,
-    module.lambda_layer_database.lambda_layer_arn
+    module.lambda_layer_users_database.lambda_layer_arn
   ]
 
   depends_on = [module.users_database]
@@ -496,7 +496,7 @@ module "get_user_lambda" {
 
   layers = [
     module.lambda_layer_logging.lambda_layer_arn,
-    module.lambda_layer_database.lambda_layer_arn
+    module.lambda_layer_users_database.lambda_layer_arn
   ]
 
   environment_variables = {
@@ -512,7 +512,7 @@ module "list_users_lambda" {
   source = "terraform-aws-modules/lambda/aws"
 
   function_name = "list-users"
-  description   = "Get list of user"
+  description   = "List users"
   handler       = "index.handler"
   runtime       = "nodejs14.x"
   publish       = true
@@ -538,7 +538,49 @@ module "list_users_lambda" {
 
   layers = [
     module.lambda_layer_logging.lambda_layer_arn,
-    module.lambda_layer_database.lambda_layer_arn
+    module.lambda_layer_users_database.lambda_layer_arn
+  ]
+
+  environment_variables = {
+    DB_HOST = module.users_database.db_instance_address,
+    DB_PORT = module.users_database.db_instance_port,
+    DB_NAME = module.users_database.db_instance_name,
+    DB_USER = module.users_database.db_instance_username,
+    DB_PASS = module.users_database.db_master_password,
+  }
+}
+
+module "update_user_lambda" {
+  source = "terraform-aws-modules/lambda/aws"
+
+  function_name = "update-user"
+  description   = "Update specific user"
+  handler       = "index.handler"
+  runtime       = "nodejs14.x"
+  publish       = true
+  timeout       = 60
+
+  source_path = "../../../backend/serverless/lambdas/users/updateUser"
+
+  store_on_s3 = true
+  s3_bucket   = "my-bucket-id-with-lambda-builds"
+
+  vpc_subnet_ids         = module.networking.private_subnet_ids
+  vpc_security_group_ids = [module.private_vpc_sg.security_group_id]
+  attach_network_policy = true
+
+  allowed_triggers = {
+    AllowExecutionFromAPIGateway = {
+      service    = "apigateway"
+      source_arn = "${module.api_gateway.apigatewayv2_api_execution_arn}/*/*/*"
+    }
+  }
+
+  attach_dead_letter_policy = false
+
+  layers = [
+    module.lambda_layer_logging.lambda_layer_arn,
+    module.lambda_layer_users_database.lambda_layer_arn
   ]
 
   environment_variables = {
@@ -690,6 +732,13 @@ module "api_gateway" {
     }
     "GET /users/{userId}" = {
       lambda_arn             = module.get_user_lambda.lambda_function_invoke_arn
+      payload_format_version = "2.0"
+      timeout_milliseconds   = 12000
+      authorization_type     = "CUSTOM"
+      authorizer_id          = aws_apigatewayv2_authorizer.jwt_auth.id
+    }
+    "PUT /users/{userId}" = {
+      lambda_arn             = module.update_user_lambda.lambda_function_invoke_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
       authorization_type     = "CUSTOM"

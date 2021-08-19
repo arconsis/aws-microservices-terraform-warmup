@@ -35,14 +35,14 @@ exports.handler = async function createUser(event, context) {
       throw new Error('Event not found');
     }
     isAbleToCreateUser(event);
-    const decodedEvent = getPayloadAsJSON(event);
-    validations.assertCreateUserPayload(decodedEvent);
+    const payload = getPayloadAsJSON(event);
+    validations.assertCreateUserPayload(payload);
     const userResponse = await usersService.createUser({
-      firstName: decodedEvent.firstName,
-      lastName: decodedEvent.lastName,
-      userName: decodedEvent.userName,
-      email: decodedEvent.email,
-      password: decodedEvent.password,
+      firstName: payload.firstName,
+      lastName: payload.lastName,
+      userName: payload.userName,
+      email: payload.email,
+      password: payload.password,
     });
     await database.close();
     return {

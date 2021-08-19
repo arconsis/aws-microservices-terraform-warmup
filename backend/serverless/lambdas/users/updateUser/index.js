@@ -6,11 +6,18 @@ const {
   databaseUri,
 } = require('./configuration');
 const {
-  isAbleToListUsers,
+  getUserIdFromPath,
+  isAbleToUpdateSpecificUser,
 } = require('./presentation/middleware/authorization');
+const {
+  getPayloadAsJSON,
+} = require('./common/utils');
+const {
+  assertUpdateUserPayload,
+} = require('./presentation/middleware/validations');
 
-exports.handler = async function listUsers(event, context) {
-  logger.log(`List users EVENT: \n ${JSON.stringify(event, null, 2)}`);
+exports.handler = async function updateUser(event, context) {
+  logger.log(`Update user handler EVENT: \n ${JSON.stringify(event, null, 2)}`);
   const database = databaseFactory.init(databaseUri);
   try {
     const usersRepository = usersRepositoryFactory.init({
@@ -19,8 +26,14 @@ exports.handler = async function listUsers(event, context) {
     const usersService = usersServiceFactory.init({
       usersRepository,
     });
-    isAbleToListUsers(event);
-    const users = await usersService.listUsers({});
+    isAbleToUpdateSpecificUser(event);
+    const payload = getPayloadAsJSON(event);
+    assertUpdateUserPayload(payload);
+    const userId = getUserIdFromPath(event);
+    const user = await usersService.updateUser({
+      userId,
+      profileImage: payload.profileImage,
+    });
     return {
       statusCode: 200,
       headers: {
@@ -28,12 +41,12 @@ exports.handler = async function listUsers(event, context) {
       },
       body: JSON.stringify({
         data: {
-          ...users,
+          ...user,
         },
       }),
     };
   } catch (error) {
-    logger.error('Get user error: ', error);
+    logger.error('Update user error: ', error);
     await database.close(database);
     return {
       statusCode: 500,
@@ -41,7 +54,7 @@ exports.handler = async function listUsers(event, context) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        error: error.message || 'Error when fetch user',
+        error: error.message || 'Error when update user',
       }),
     };
   }

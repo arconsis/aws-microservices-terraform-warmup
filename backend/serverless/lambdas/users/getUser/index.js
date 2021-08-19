@@ -1,4 +1,4 @@
-const logger = require('logging');
+const logger = require('./common/logging');
 const databaseFactory = require('./data/infrastructure/database');
 const usersRepositoryFactory = require('./data/repositories/users/repository');
 const usersServiceFactory = require('./domain/users/service');
