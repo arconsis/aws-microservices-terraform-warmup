@@ -1,22 +1,22 @@
 const validator = require('validator');
 
-function assertCreateUserPayload(event) {
-  if (!event) {
-    throw new Error('Event not found');
+function assertCreateUserPayload(payload) {
+  if (!payload) {
+    throw new Error('Payload not found');
   }
-  if (!event.email || !validator.isEmail(event.email)) {
+  if (!payload.email || !validator.isEmail(payload.email)) {
     throw new Error('email not provided. Make sure you have a correct "email" property in your request body.');
   }
-  if (!event.password) {
+  if (!payload.password) {
     throw new Error('password not provided. Make sure you have a "password" property in your request body.');
   }
-  if (!event.firstName) {
+  if (!payload.firstName) {
     throw new Error('firstName not provided. Make sure you have a "firstName" property in your request body.');
   }
-  if (!event.lastName) {
+  if (!payload.lastName) {
     throw new Error('lastName not provided. Make sure you have a "lastName" property in your request body.');
   }
-  if (!event.userName) {
+  if (!payload.userName) {
     throw new Error('userName not provided. Make sure you have a "userName" property in your request body.');
   }
 }
