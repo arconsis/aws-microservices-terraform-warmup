@@ -222,16 +222,16 @@ module "lambda_layer_logging" {
   s3_bucket   = "my-bucket-id-with-lambda-builds"
 }
 
-module "lambda_layer_database" {
+module "lambda_layer_users_database" {
   source = "terraform-aws-modules/lambda/aws"
 
   create_layer = true
 
-  layer_name          = "lambda-layer-database"
+  layer_name          = "lambda-layer-users-database"
   description         = "Handle lambdas database integration"
   compatible_runtimes = ["nodejs14.x"]
 
-  source_path = "../../../backend/serverless/layers/database"
+  source_path = "../../../backend/serverless/layers/usersDatabase"
 
   store_on_s3 = true
   s3_bucket   = "my-bucket-id-with-lambda-builds"
@@ -361,7 +361,7 @@ module "login" {
   
   layers = [
     module.lambda_layer_logging.lambda_layer_arn,
-    module.lambda_layer_database.lambda_layer_arn
+    module.lambda_layer_users_database.lambda_layer_arn
   ]
 
   environment_variables = {
@@ -406,7 +406,7 @@ module "create_admin_lambda" {
 
   layers = [
     module.lambda_layer_logging.lambda_layer_arn,
-    module.lambda_layer_database.lambda_layer_arn
+    module.lambda_layer_users_database.lambda_layer_arn
   ]
 
   depends_on = [module.users_database]
@@ -452,7 +452,7 @@ module "create_user_lambda" {
 
   layers = [
     module.lambda_layer_logging.lambda_layer_arn,
-    module.lambda_layer_database.lambda_layer_arn
+    module.lambda_layer_users_database.lambda_layer_arn
   ]
 
   depends_on = [module.users_database]
@@ -496,7 +496,7 @@ module "get_user_lambda" {
 
   layers = [
     module.lambda_layer_logging.lambda_layer_arn,
-    module.lambda_layer_database.lambda_layer_arn
+    module.lambda_layer_users_database.lambda_layer_arn
   ]
 
   environment_variables = {
@@ -538,7 +538,7 @@ module "list_users_lambda" {
 
   layers = [
     module.lambda_layer_logging.lambda_layer_arn,
-    module.lambda_layer_database.lambda_layer_arn
+    module.lambda_layer_users_database.lambda_layer_arn
   ]
 
   environment_variables = {
