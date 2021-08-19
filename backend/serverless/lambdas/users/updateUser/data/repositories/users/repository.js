@@ -12,7 +12,7 @@ module.exports.init = ({ dataStores }) => {
       lock,
       transaction,
     }) {
-      const userDoc = await usersDataStore.createUser({
+      const userDoc = await usersDataStore.updateUser({
         id,
         userId,
         userName,

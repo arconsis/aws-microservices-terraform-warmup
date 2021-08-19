@@ -8,7 +8,7 @@ function init({
     profileImage,
     thumbnails,
   }) {
-    return usersRepository.createUser({
+    return usersRepository.updateUser({
       id,
       userId,
       userName,

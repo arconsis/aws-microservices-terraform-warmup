@@ -6,7 +6,8 @@ class User {
     lastName,
     userName,
     email,
-    roles,
+    profileImage,
+    thumbnails,
     createdAt,
   } = {}) {
     this.id = id;
@@ -15,9 +16,11 @@ class User {
     this.lastName = lastName;
     this.userName = userName;
     this.email = email;
-    this.roles = roles;
+    this.profileImage = profileImage;
+    this.thumbnails = thumbnails;
     this.createdAt = createdAt;
   }
 }
+
 
 module.exports = User;
