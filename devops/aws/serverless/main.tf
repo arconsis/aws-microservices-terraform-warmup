@@ -553,7 +553,7 @@ module "list_users_lambda" {
 module "update_user_lambda" {
   source = "terraform-aws-modules/lambda/aws"
 
-  function_name = "list-users"
+  function_name = "update-user"
   description   = "Update specific user"
   handler       = "index.handler"
   runtime       = "nodejs14.x"

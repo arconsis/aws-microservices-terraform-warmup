@@ -1,4 +1,4 @@
-const database = require('database');
+const database = require('usersDatabase');
 
 module.exports.init = function init(uri) {
   return database.create({
