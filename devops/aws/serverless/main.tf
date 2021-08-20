@@ -44,6 +44,17 @@ module "private_vpc_sg" {
 }
 
 ################################################################################
+# S3 Buckets Configuration
+################################################################################
+module "users_profile_images_bucket" {
+  source = "terraform-aws-modules/s3-bucket/aws"
+
+  bucket = "users-profile-images-tf"
+  acl    = "private"
+  force_destroy = true
+}
+
+################################################################################
 # Database Configuration
 ################################################################################
 
@@ -595,7 +606,7 @@ module "update_user_lambda" {
     DB_USER = module.users_database.db_instance_username,
     DB_PASS = module.users_database.db_master_password,
     AWS_S3_REGION = var.aws_region
-    AWS_S3_BUCKET = "users-profile-images-tf"
+    AWS_S3_BUCKET = module.users_profile_images_bucket.s3_bucket_id
   }
 }
 ################################################################################
