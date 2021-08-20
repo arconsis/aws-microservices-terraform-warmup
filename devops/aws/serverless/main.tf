@@ -577,6 +577,11 @@ module "update_user_lambda" {
   }
 
   attach_dead_letter_policy = false
+  attach_policies           = true
+  number_of_policies        = 1
+  policies = [
+    "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+  ]
 
   layers = [
     module.lambda_layer_logging.lambda_layer_arn,
@@ -589,6 +594,8 @@ module "update_user_lambda" {
     DB_NAME = module.users_database.db_instance_name,
     DB_USER = module.users_database.db_instance_username,
     DB_PASS = module.users_database.db_master_password,
+    AWS_S3_REGION = var.aws_region
+    AWS_S3_BUCKET = "users-profile-images-tf"
   }
 }
 ################################################################################
