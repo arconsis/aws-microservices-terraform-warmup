@@ -55,6 +55,44 @@ module "users_profile_images_bucket" {
 }
 
 ################################################################################
+# SQS Queue Configuration
+################################################################################
+resource "aws_sqs_queue" "users_profile_images_queue" {
+  name = "users-profile-images"
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "sqs:SendMessage",
+      "Resource": "arn:aws:sqs:*:*:users-profile-images",
+      "Condition": {
+        "ArnEquals": { "aws:SourceArn": "${module.users_profile_images_bucket.s3_bucket_arn}" }
+      }
+    }
+  ]
+}
+POLICY
+}
+
+################################################################################
+# S3 - SQS Notifications
+################################################################################
+resource "aws_s3_bucket_notification" "users_profile_images_notification" {
+  bucket = module.users_profile_images_bucket.s3_bucket_id
+
+  queue {
+    queue_arn     = aws_sqs_queue.users_profile_images_queue.arn
+    events        = ["s3:ObjectCreated:*"]
+  }
+
+  depends_on = [aws_sqs_queue.users_profile_images_queue]
+}
+
+################################################################################
 # Database Configuration
 ################################################################################
 
