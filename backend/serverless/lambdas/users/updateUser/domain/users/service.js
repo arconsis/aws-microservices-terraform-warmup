@@ -1,4 +1,10 @@
+const moment = require('moment');
+const {
+  aws: awsConfig,
+} = require('../../configuration');
+
 function init({
+  filesRepository,
   usersRepository,
 }) {
   async function updateUser({
@@ -8,11 +14,16 @@ function init({
     profileImage,
     thumbnails,
   }) {
+    const s3ImageResponse = await filesRepository.uploadFileFromBase64({
+      base64: profileImage,
+      bucket: awsConfig.s3.bucket,
+      key: `${userId}__${moment.utc().valueOf()}`,
+    });
     return usersRepository.updateUser({
       id,
       userId,
       userName,
-      profileImage,
+      profileImage: s3ImageResponse.fileUrl,
       thumbnails,
     });
   }
@@ -21,6 +32,5 @@ function init({
     updateUser,
   });
 }
-
 
 module.exports.init = init;

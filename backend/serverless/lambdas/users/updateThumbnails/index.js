@@ -1,6 +1,5 @@
 const logger = require('./common/logging');
 const databaseFactory = require('./data/infrastructure/database');
-const filesRepositoryFactory = require('./data/repositories/files/repository');
 const usersRepositoryFactory = require('./data/repositories/users/repository');
 const usersServiceFactory = require('./domain/users/service');
 const {
@@ -21,12 +20,10 @@ exports.handler = async function updateUser(event, context) {
   logger.log(`Update user handler EVENT: \n ${JSON.stringify(event, null, 2)}`);
   const database = databaseFactory.init(databaseUri);
   try {
-    const filesRepository = filesRepositoryFactory.init();
     const usersRepository = usersRepositoryFactory.init({
       dataStores: database.dataStores,
     });
     const usersService = usersServiceFactory.init({
-      filesRepository,
       usersRepository,
     });
     isAbleToUpdateSpecificUser(event);

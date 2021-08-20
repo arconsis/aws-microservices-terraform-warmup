@@ -4,8 +4,10 @@ function assertUpdateUserPayload(payload) {
   if (!payload) {
     throw new Error('Event not found');
   }
-  if (!payload.profileImage || !validator.isURL(payload.profileImage)) {
-    throw new Error('profileImage not provided. Make sure you have a correct "profileImage" property as URL in your request body.');
+  if (!payload.profileImage
+    // || !validator.isBase64(payload.profileImage, { urlSafe: true })
+  ) {
+    throw new Error('profileImage not provided. Make sure you have a correct "profileImage" property as base64 in your request body.');
   }
 }
 
