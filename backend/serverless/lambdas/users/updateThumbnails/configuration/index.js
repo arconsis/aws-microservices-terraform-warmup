@@ -7,6 +7,10 @@ const config = {
       region: process.env.AWS_SQS_REGION,
       queueURL: process.env.AWS_SQS_QUEUE_URL,
     },
+    s3: {
+      region: process.env.AWS_S3_REGION,
+      bucket: process.env.AWS_S3_BUCKET,
+    },
   }
 };
 

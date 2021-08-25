@@ -1,5 +1,8 @@
 const logger = require('./common/logging');
 const databaseFactory = require('./data/infrastructure/database');
+const filesRepositoryFactory = require('./data/repositories/files/repository');
+const imagesTransformationRepositoryFactory = require('./data/repositories/imagesTransformation/repository');
+const queueRepositoryFactory = require('./data/repositories/queue/repository');
 const usersRepositoryFactory = require('./data/repositories/users/repository');
 const usersServiceFactory = require('./domain/users/service');
 const {
@@ -20,20 +23,23 @@ exports.handler = async function updateUser(event, context) {
   logger.log(`Update user handler EVENT: \n ${JSON.stringify(event, null, 2)}`);
   const database = databaseFactory.init(databaseUri);
   try {
+    const filesRepository = filesRepositoryFactory.init();
+    const imagesTransformationRepository = imagesTransformationRepositoryFactory.init();
+    const queueRepository = queueRepositoryFactory.init();
     const usersRepository = usersRepositoryFactory.init({
       dataStores: database.dataStores,
     });
     const usersService = usersServiceFactory.init({
+      filesRepository,
+      imagesTransformationRepository,
       usersRepository,
     });
-    isAbleToUpdateSpecificUser(event);
-    const payload = getPayloadAsJSON(event);
-    assertUpdateUserPayload(payload);
-    const userId = getUserIdFromPath(event);
-    const user = await usersService.updateUser({
-      userId,
-      profileImage: payload.profileImage,
-    });
+    await Promise.all(event.Records.map((record) => {
+      console.log("recordrecord", record)
+      const { body } = record;
+      console.log("bodybody", body)
+      queueRepository.deleteMessage()
+    }))
     return {
       statusCode: 200,
       headers: {

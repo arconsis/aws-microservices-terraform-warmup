@@ -468,6 +468,7 @@ module "create_admin_lambda" {
     DB_PASS = module.users_database.db_master_password,
   }
 }
+
 ################################################################################
 # USERS Lambdas
 ################################################################################
@@ -647,6 +648,65 @@ module "update_user_lambda" {
     AWS_S3_BUCKET = module.users_profile_images_bucket.s3_bucket_id
   }
 }
+
+module "modify_user_profile_image_lambda" {
+  source = "terraform-aws-modules/lambda/aws"
+
+  function_name = "modify-user-profile-image"
+  description   = "Modify specific user profile image"
+  handler       = "index.handler"
+  runtime       = "nodejs14.x"
+  publish       = true
+  timeout       = 60
+
+  source_path = "../../../backend/serverless/lambdas/users/updateThumbnails"
+
+  store_on_s3 = true
+  s3_bucket   = "my-bucket-id-with-lambda-builds"
+
+  vpc_subnet_ids         = module.networking.private_subnet_ids
+  vpc_security_group_ids = [module.private_vpc_sg.security_group_id]
+  attach_network_policy = true
+
+  attach_dead_letter_policy = false
+  attach_policies           = true
+  number_of_policies        = 2
+  policies = [
+    "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+    "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole",
+  ]
+
+  event_source_mapping = {
+    sqs = {
+      event_source_arn = aws_sqs_queue.users_profile_images_queue.arn
+    }
+  }
+
+  allowed_triggers = {
+    sqs = {
+      principal  = "sqs.amazonaws.com"
+      source_arn = aws_sqs_queue.users_profile_images_queue.arn
+    }
+  }
+
+  layers = [
+    module.lambda_layer_logging.lambda_layer_arn,
+    module.lambda_layer_users_database.lambda_layer_arn
+  ]
+
+  environment_variables = {
+    DB_HOST = module.users_database.db_instance_address,
+    DB_PORT = module.users_database.db_instance_port,
+    DB_NAME = module.users_database.db_instance_name,
+    DB_USER = module.users_database.db_instance_username,
+    DB_PASS = module.users_database.db_master_password,
+    AWS_S3_REGION = var.aws_region
+    AWS_S3_BUCKET = module.users_profile_images_bucket.s3_bucket_id
+    AWS_SQS_REGION = var.aws_region
+    AWS_SQS_QUEUE_URL = aws_sqs_queue.users_profile_images_queue.url
+  }
+}
+
 ################################################################################
 # POSTS Lambdas
 ################################################################################
