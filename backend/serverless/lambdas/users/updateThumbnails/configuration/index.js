@@ -11,7 +11,7 @@ const config = {
       region: process.env.AWS_S3_REGION,
       bucket: process.env.AWS_S3_BUCKET,
     },
-  }
+  },
 };
 
 module.exports = Object.freeze(config);

@@ -54,6 +54,14 @@ module "users_profile_images_bucket" {
   force_destroy = true
 }
 
+module "users_thumbnails_images_bucket" {
+  source = "terraform-aws-modules/s3-bucket/aws"
+
+  bucket = "users-thumbnails-images-tf"
+  acl    = "private"
+  force_destroy = true
+}
+
 ################################################################################
 # SQS Queue Configuration
 ################################################################################
@@ -657,7 +665,8 @@ module "modify_user_profile_image_lambda" {
   handler       = "index.handler"
   runtime       = "nodejs14.x"
   publish       = true
-  timeout       = 60
+  # Queue visibility timeout: 30 seconds is less than Function timeout: 60 seconds
+  timeout       = 30
 
   source_path = "../../../backend/serverless/lambdas/users/updateThumbnails"
 
@@ -701,7 +710,7 @@ module "modify_user_profile_image_lambda" {
     DB_USER = module.users_database.db_instance_username,
     DB_PASS = module.users_database.db_master_password,
     AWS_S3_REGION = var.aws_region
-    AWS_S3_BUCKET = module.users_profile_images_bucket.s3_bucket_id
+    AWS_S3_BUCKET = module.users_thumbnails_images_bucket.s3_bucket_id
     AWS_SQS_REGION = var.aws_region
     AWS_SQS_QUEUE_URL = aws_sqs_queue.users_profile_images_queue.url
   }

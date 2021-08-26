@@ -11,6 +11,8 @@ module.exports.init = function init() {
   async function uploadFileFromBase64({ base64, bucket, key }) {
     const base64Data = Buffer.from(base64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
     const type = base64.split(';')[0].split('/')[1];
+    console.log('image key', key);
+    console.log('image type', type);
     const params = {
       Bucket: bucket,
       Key: `${key}.${type}`,
