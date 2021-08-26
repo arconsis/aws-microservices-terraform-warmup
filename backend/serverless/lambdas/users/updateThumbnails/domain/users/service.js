@@ -1,26 +1,32 @@
+const moment = require('moment');
+const {
+  aws: awsConfig,
+} = require('../../configuration');
+
 function init({
+  filesRepository,
+  imagesTransformationRepository,
   usersRepository,
 }) {
-  async function updateUser({
-    id,
+  async function updateUserThumbnails({
     userId,
-    userName,
     profileImage,
-    thumbnails,
   }) {
+    const thumbnail = await imagesTransformationRepository.cropImage(profileImage);
+    const s3ImageResponse = await filesRepository.uploadFileFromBase64({
+      base64: thumbnail,
+      bucket: awsConfig.s3.bucket,
+      key: `${userId}__${moment.utc().valueOf()}`,
+    });
     return usersRepository.updateUser({
-      id,
       userId,
-      userName,
-      profileImage,
-      thumbnails,
+      thumbnails: [s3ImageResponse.fileUrl],
     });
   }
 
   return Object.freeze({
-    updateUser,
+    updateUserThumbnails,
   });
 }
-
 
 module.exports.init = init;
