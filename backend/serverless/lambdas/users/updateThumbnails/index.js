@@ -10,7 +10,7 @@ const {
 
 function extractUserIdFromRecord(record) {
   if (record && record.s3 && record.s3.object && record.s3.object.key) {
-    return record.s3.object.key.split('__');
+    return record.s3.object.key.split('__')[0];
   }
   return undefined;
 }
@@ -46,18 +46,12 @@ exports.handler = async function updateUserThumbnails(event, context) {
       usersRepository,
     });
     await Promise.all(event.Records.map(async (record) => {
-      console.log("record", record);
+      logger.log('record', record);
       const { body } = record;
-      console.log("body", body);
-      console.log("typeof body", typeof body);
       const payload = getPayloadAsJSON(body);
-      console.log("payload", payload);
       await Promise.all(payload.Records.map(async (message) => {
-        console.log("message", message);
         const userId = extractUserIdFromRecord(message);
-        console.log("userId", userId);
         const profileImage = extractProfileImageUrlFromRecord(message);
-        console.log("profileImage", profileImage);
         await usersService.updateUserThumbnails({
           userId,
           profileImage,
@@ -69,7 +63,7 @@ exports.handler = async function updateUserThumbnails(event, context) {
       statusCode: 200,
     };
   } catch (error) {
-    logger.error('Update user error: ', error);
+    logger.error('Update user thumbnails error: ', error);
     await database.close(database);
     return {
       statusCode: 500,
