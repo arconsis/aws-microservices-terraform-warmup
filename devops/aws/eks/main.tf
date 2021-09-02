@@ -53,20 +53,11 @@ module "eks" {
   worker_groups = [
     {
       name                 = "worker-group-1"
-      instance_type        = "t2.micro"
+      instance_type        = "t2.small"
       asg_desired_capacity = 2
       asg_max_size         = 5
     }
   ]
-  # node_groups = {
-  #   first = {
-  #     desired_capacity = 4
-  #     max_capacity     = 10
-  #     min_capacity     = 4
-
-  #     instance_type = "t2.micro"
-  #   }
-  # }
 
   write_kubeconfig       = true
   kubeconfig_output_path = "./"
