@@ -95,12 +95,12 @@ resource "helm_release" "ingress" {
   namespace  = "kube-system"
 
   set {
-    name  = "autoDiscoverAwsRegion"
-    value = "true"
+    name  = "vpcId"
+    value = module.networking.vpc_id
   }
   set {
-    name  = "autoDiscoverAwsVpcID"
-    value = "true"
+    name  = "region"
+    value = var.aws_region
   }
   set {
     name  = "clusterName"
