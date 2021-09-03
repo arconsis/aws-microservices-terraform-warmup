@@ -73,3 +73,15 @@ variable "availability_zones" {
   type        = list(any)
   description = "List of availability zones you want. Example: eu-west-1a and eu-west-1b"
 }
+
+variable "public_subnet_additional_tags" {
+  default     = {}
+  description = "Additional resource tags"
+  type        = map(string)
+}
+
+variable "private_subnet_additional_tags" {
+  default     = {}
+  description = "Additional resource tags"
+  type        = map(string)
+}

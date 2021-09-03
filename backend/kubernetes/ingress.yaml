@@ -1,0 +1,25 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: backend-ingress
+  namespace: tf-tutorial
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /users
+            backend:
+              serviceName: users-service
+              servicePort: 3000
+          - path: /promotions
+            backend:
+              serviceName: promotions-service
+              servicePort: 8080
+          - path: /books
+            backend:
+              serviceName: books-service
+              servicePort: 3000
