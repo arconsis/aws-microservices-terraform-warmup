@@ -1,8 +1,12 @@
 const axios = require('axios');
 
 module.exports.init = function init() {
-  async function cropImage(imageUrl) {
-    const baseUrl = 'https://res.cloudinary.com/demo/image/fetch/c_fill,g_face,h_100,w_100/r_max/f_auto';
+  async function cropImage({
+    imageUrl,
+    width = 100,
+    height = 100,
+  }) {
+    const baseUrl = `https://res.cloudinary.com/demo/image/fetch/c_fill,g_face,h_${height},w_${width}/r_max/f_auto`;
     const response = await axios.get(`${baseUrl}/${imageUrl}`, {
       responseType: 'arraybuffer',
     });

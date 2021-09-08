@@ -3,6 +3,7 @@ const validations = require('./presentation/middleware/validations');
 const errorHandler = require('./presentation/middleware/errors');
 const databaseFactory = require('./data/infrastructure/database');
 const usersRepositoryFactory = require('./data/repositories/users/repository');
+const queueRepositoryFactory = require('./data/repositories/queue/repository');
 const usersServiceFactory = require('./domain/users/service');
 const {
   databaseUri,
@@ -25,8 +26,10 @@ exports.handler = async function createUser(event, context) {
   const usersRepository = usersRepositoryFactory.init({
     dataStores: database.dataStores,
   });
+  const queueRepository = queueRepositoryFactory.init();
   const usersService = usersServiceFactory.init({
     usersRepository,
+    queueRepository,
   });
   try {
     await database.authenticate();

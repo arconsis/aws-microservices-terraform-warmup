@@ -1,9 +1,13 @@
 const {
   USER_ROLE,
 } = require('../../common/constants');
+const {
+  toQueueMessage,
+} = require('../../data/repositories/queue/mapper');
 
 function init({
   usersRepository,
+  queueRepository,
 }) {
   async function createUser({
     firstName,
@@ -12,7 +16,7 @@ function init({
     email,
     password,
   }) {
-    return usersRepository.createUser({
+    const user = await usersRepository.createUser({
       firstName,
       lastName,
       userName,
@@ -20,6 +24,14 @@ function init({
       password,
       roles: [USER_ROLE],
     });
+    const msg = {
+      id: user.id,
+      userId: user.userId,
+      email: user.email,
+    };
+    const body = `Create default post for user with id: ${user.userId}`;
+    await queueRepository.sendMessage(toQueueMessage(msg), body);
+    return user;
   }
 
   return {
