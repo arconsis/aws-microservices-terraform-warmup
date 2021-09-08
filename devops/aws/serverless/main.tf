@@ -90,7 +90,7 @@ POLICY
 resource "aws_sqs_queue" "users_demo_post_queue" {
   name = "users-demo-posts"
 
-  # SQS Policy to specify which service can send messages to this queue
+  # SQS Policy to specify that lambda (create_user) can send messages to this queue
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -108,6 +108,31 @@ resource "aws_sqs_queue" "users_demo_post_queue" {
 }
 POLICY
 }
+# SQS Policy to specify that everything in VPC can send messages to this queue
+# policy = <<POLICY
+#   {
+#   "Id": "Policy1631124485374",
+#   "Version": "2012-10-17",
+#   "Statement": [
+#     {
+#       "Sid": "Stmt1631124483429",
+#       "Action": [
+#         "sqs:SendMessage"
+#       ],
+#       "Effect": "Allow",
+#       "Resource": "arn:aws:sqs:*:*:users-demo-posts",
+#       "Condition": {
+#         "StringEquals": {
+#           "aws:SourceVpc": "${module.networking.vpc_id}"
+#         }
+#       },
+#       "Principal": "*"
+#     }
+#   ]
+# }
+# POLICY
+
+
 
 ################################################################################
 # S3 - SQS Notifications
@@ -506,7 +531,7 @@ module "create_user_lambda" {
     sqs = {
       effect    = "Allow",
       actions   = ["sqs:*"],
-      resources = ["arn:aws:sqs:eu-west-1:${var.aws_account_id}:${aws_sqs_queue.users_demo_post_queue.name}"]
+      resources = ["arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${aws_sqs_queue.users_demo_post_queue.name}"]
     }
   }
 
@@ -524,7 +549,7 @@ module "create_user_lambda" {
     DB_USER = module.users_database.db_instance_username,
     DB_PASS = module.users_database.db_master_password,
     AWS_SQS_REGION = var.aws_region
-    AWS_SQS_QUEUE_URL = "https://sqs.eu-west-1.amazonaws.com/${var.aws_account_id}/users-demo-posts"
+    AWS_SQS_QUEUE_URL = "https://sqs.${var.aws_region}.amazonaws.com/${var.aws_account_id}/users-demo-posts"
   }
 }
 
