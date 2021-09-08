@@ -111,11 +111,9 @@ POLICY
 # SQS Policy to specify that everything in VPC can send messages to this queue
 # policy = <<POLICY
 #   {
-#   "Id": "Policy1631124485374",
 #   "Version": "2012-10-17",
 #   "Statement": [
 #     {
-#       "Sid": "Stmt1631124483429",
 #       "Action": [
 #         "sqs:SendMessage"
 #       ],
