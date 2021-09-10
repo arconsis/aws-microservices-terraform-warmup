@@ -6,6 +6,12 @@ variable "aws_region" {
   default     = "eu-west-1"
 }
 
+variable "aws_account_id" {
+  description = "The AWS account id"
+  type        = string
+  sensitive   = true
+}
+
 variable "environment" {
   description = "Indicate the environment"
   default     = "dev"

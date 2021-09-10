@@ -12,49 +12,82 @@ const {
   getUserPKFromRequestContext,
 } = require('./presentation/middleware/authorization');
 
-function getPayloadAsJSON(event) {
+let database;
+let postsRepository;
+let postsService;
+
+function getPayloadAsJSON(str) {
   try {
-    return JSON.parse(event.body);
+    return JSON.parse(str);
   } catch (error) {
     return undefined;
   }
 }
 
+function extractUserPKFromRecord(record) {
+  if (record && record.messageAttributes && record.messageAttributes.Id && record.messageAttributes.Id.stringValue) {
+    return record.messageAttributes.Id.stringValue;
+  }
+  return undefined;
+}
+
+async function handleRequestFromApiGW(event) {
+  logging.log('Handle request from API GW');
+  isAbleToCreatePost(event);
+  const decodedEvent = getPayloadAsJSON(event.body);
+  validations.assertCreatePostPayload(decodedEvent);
+  const postResponse = await postsService.createPost({
+    title: decodedEvent.title,
+    message: decodedEvent.message,
+    userId: getUserPKFromRequestContext(event),
+  });
+  await database.close();
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      data: {
+        ...postResponse,
+      },
+    }),
+  };
+}
+
+async function handleRequestFromSQS(event) {
+  logging.log('Handle request from SQS', event);
+  await Promise.all(event.Records.map(async (record) => {
+    const userPK = extractUserPKFromRecord(record);
+    await postsService.createPost({
+      title: 'Default post title',
+      message: 'Default post message',
+      userId: parseInt(userPK, 10),
+    });
+  }));
+}
+
 exports.handler = async function createPost(event, context) {
   logging.log(`Enter handler createPost with EVENT : \n ${JSON.stringify(event, null, 2)}`);
-  const database = databaseFactory.init(databaseUri);
-  const postsRepository = postsRepositoryFactory.init({
+  database = databaseFactory.init(databaseUri);
+  postsRepository = postsRepositoryFactory.init({
     dataStores: database.dataStores,
   });
-  const postsService = postsServiceFactory.init({
+  postsService = postsServiceFactory.init({
     postsRepository,
   });
   try {
     await database.authenticate();
     logging.log('Connection has been established successfully.');
-    if (!event || !event.body) {
+    if (!event) {
       throw new Error('Event not found');
     }
-    isAbleToCreatePost(event);
-    const decodedEvent = getPayloadAsJSON(event);
-    validations.assertCreatePostPayload(decodedEvent);
-    const postResponse = await postsService.createPost({
-      title: decodedEvent.title,
-      message: decodedEvent.message,
-      userId: getUserPKFromRequestContext(event),
-    });
-    await database.close();
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        data: {
-          ...postResponse,
-        },
-      }),
-    };
+    if (event.Records) {
+      return handleRequestFromSQS(event);
+    } else if (event.body) {
+      return handleRequestFromApiGW(event);
+    }
+    throw new Error('Incorrect invocation handler');
   } catch (error) {
     logging.error('Create post error: ', error);
     await database.close(database);

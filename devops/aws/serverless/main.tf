@@ -68,6 +68,7 @@ module "users_thumbnails_images_bucket" {
 resource "aws_sqs_queue" "users_profile_images_queue" {
   name = "users-profile-images"
 
+  # SQS Policy to specify which service can send messages to this queue
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -86,6 +87,51 @@ resource "aws_sqs_queue" "users_profile_images_queue" {
 POLICY
 }
 
+resource "aws_sqs_queue" "users_demo_post_queue" {
+  name = "users-demo-posts"
+
+  # SQS Policy to specify that lambda (create_user) can send messages to this queue
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "sqs:SendMessage",
+      "Resource": "arn:aws:sqs:*:*:users-demo-posts",
+      "Condition": {
+        "ArnEquals": { "aws:SourceArn": "${module.create_user_lambda.lambda_function_invoke_arn}" }
+      }
+    }
+  ]
+}
+POLICY
+}
+# SQS Policy to specify that everything in VPC can send messages to this queue
+# policy = <<POLICY
+#   {
+#   "Version": "2012-10-17",
+#   "Statement": [
+#     {
+#       "Action": [
+#         "sqs:SendMessage"
+#       ],
+#       "Effect": "Allow",
+#       "Resource": "arn:aws:sqs:*:*:users-demo-posts",
+#       "Condition": {
+#         "StringEquals": {
+#           "aws:SourceVpc": "${module.networking.vpc_id}"
+#         }
+#       },
+#       "Principal": "*"
+#     }
+#   ]
+# }
+# POLICY
+
+
+
 ################################################################################
 # S3 - SQS Notifications
 ################################################################################
@@ -103,48 +149,18 @@ resource "aws_s3_bucket_notification" "users_profile_images_notification" {
 ################################################################################
 # Database Configuration
 ################################################################################
-
-# module "aurora_postgresql" {
-#   source  = "terraform-aws-modules/rds-aurora/aws"
-#   version = "~> 3.0"
-
-#   name           = "aurora-db-postgres"
-#   engine         = "aurora-postgresql"
-#   engine_version = "11.9"
-#   instance_type  = "db.t3.medium"
-
-#   vpc_id  = module.networking.vpc_id
-#   subnets = module.networking.private_subnet_ids
-
-#   replica_count           = 1
-#   allowed_security_groups = [module.private_vpc_sg.security_group_id]
-#   # allowed_cidr_blocks     = ["10.20.0.0/20"]
-
-#   storage_encrypted   = true
-#   apply_immediately   = true
-#   monitoring_interval = 10
-
-#   # db_parameter_group_name         = "main"
-#   # db_cluster_parameter_group_name = "main"
-
-#   enabled_cloudwatch_logs_exports = ["postgresql"]
-
-#   tags = {
-#     Environment = "dev"
-#   }
-# }
-
 module "users_database" {
   source = "terraform-aws-modules/rds/aws"
 
   identifier = "users-database"
 
   # All available versions: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html#PostgreSQL.Concepts
-  engine               = "postgres"
-  engine_version       = "11.10"
-  family               = "postgres11" # DB parameter group
-  major_engine_version = "11"         # DB option group
-  instance_class       = "db.t3.small"
+  engine                      = "postgres"
+  engine_version              = "11.12"
+  auto_minor_version_upgrade  = false
+  family                      = "postgres11" # DB parameter group
+  major_engine_version        = "11"         # DB option group
+  instance_class              = "db.t3.small"
 
   allocated_storage     = 20
   max_allocated_storage = 100
@@ -203,11 +219,12 @@ module "posts_database" {
   identifier = "posts-database"
 
   # All available versions: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html#PostgreSQL.Concepts
-  engine               = "postgres"
-  engine_version       = "11.10"
-  family               = "postgres11" # DB parameter group
-  major_engine_version = "11"         # DB option group
-  instance_class       = "db.t3.small"
+  engine                      = "postgres"
+  engine_version              = "11.12"
+  auto_minor_version_upgrade  = false
+  family                      = "postgres11" # DB parameter group
+  major_engine_version        = "11"         # DB option group
+  instance_class              = "db.t3.small"
 
   allocated_storage     = 20
   max_allocated_storage = 100
@@ -507,6 +524,14 @@ module "create_user_lambda" {
   }
 
   attach_dead_letter_policy = false
+  attach_policy_statements = true
+  policy_statements = {
+    sqs = {
+      effect    = "Allow",
+      actions   = ["sqs:*"],
+      resources = ["arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${aws_sqs_queue.users_demo_post_queue.name}"]
+    }
+  }
 
   layers = [
     module.lambda_layer_logging.lambda_layer_arn,
@@ -521,6 +546,8 @@ module "create_user_lambda" {
     DB_NAME = module.users_database.db_instance_name,
     DB_USER = module.users_database.db_instance_username,
     DB_PASS = module.users_database.db_master_password,
+    AWS_SQS_REGION = var.aws_region
+    AWS_SQS_QUEUE_URL = "https://sqs.${var.aws_region}.amazonaws.com/${var.aws_account_id}/users-demo-posts"
   }
 }
 
@@ -727,7 +754,7 @@ module "create_post_lambda" {
   handler       = "index.handler"
   runtime       = "nodejs14.x"
   publish       = true
-  timeout       = 60
+  timeout       = 30
 
   source_path = "../../../backend/serverless/lambdas/posts/createPost"
 
@@ -738,10 +765,26 @@ module "create_post_lambda" {
   vpc_security_group_ids = [module.private_vpc_sg.security_group_id]
   attach_network_policy = true
 
+  attach_policies           = true
+  number_of_policies        = 1
+  policies = [
+    "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole",
+  ]
+
+  event_source_mapping = {
+    sqs = {
+      event_source_arn = aws_sqs_queue.users_demo_post_queue.arn
+    }
+  }
+
   allowed_triggers = {
     AllowExecutionFromAPIGateway = {
       service    = "apigateway"
       source_arn = "${module.api_gateway.apigatewayv2_api_execution_arn}/*/*/*"
+    },
+    sqs = {
+      principal  = "sqs.amazonaws.com"
+      source_arn = aws_sqs_queue.users_demo_post_queue.arn
     }
   }
 
