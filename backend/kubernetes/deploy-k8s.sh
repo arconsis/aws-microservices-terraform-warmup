@@ -1,5 +1,3 @@
-kubectl apply -k "github.com/aws/eks-charts/stable/aws-load-balancer-controller//crds?ref=master"
-
 kubectl apply -f namespace.yaml
 
 kubectl apply -f booksService/deployment.yaml

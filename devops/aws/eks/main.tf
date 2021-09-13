@@ -89,21 +89,18 @@ provider "helm" {
 
 resource "helm_release" "ingress" {
   name       = "ingress"
-  chart      = "aws-load-balancer-controller"
-  repository = "https://aws.github.io/eks-charts"
-  version    = "1.2.6"
-  namespace  = "kube-system"
+  repository = "https://charts.bitnami.com/bitnami"
+  chart      = "nginx-ingress-controller"
+
+  create_namespace = true
+  namespace        = "ingress-nginx"
 
   set {
-    name  = "vpcId"
-    value = module.networking.vpc_id
+    name  = "service.type"
+    value = "LoadBalancer"
   }
   set {
-    name  = "region"
-    value = var.aws_region
-  }
-  set {
-    name  = "clusterName"
-    value = var.cluster_name
+    name  = "service.annotations"
+    value = "service.beta.kubernetes.io/aws-load-balancer-type: nlb"
   }
 }
