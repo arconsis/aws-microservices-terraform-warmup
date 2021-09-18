@@ -9,8 +9,8 @@ Collection of backend apps to simulate microservices ecosystem. We are using Ter
 
 Below we attach flow pipelines for the microservices:
 
-- ECS:
-![following](./ArchitectureFlow.jpg)
+- ECS
+ ![following](./ArchitectureFlow.jpg)
 
 - EKS
 
