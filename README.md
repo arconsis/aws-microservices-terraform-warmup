@@ -1,5 +1,5 @@
 # What is this repository for? #
-Collection of backend apps to simulate MS ecosystem. We are using Terraform to deploy microservices to AWS. Currently we support deploying using:
+Collection of backend apps to simulate microservices ecosystem. We are using Terraform to deploy these microservices to AWS. Currently we support deploying using:
 - ECS with Fargate
 - ECS with EC2
 - EKS
@@ -7,7 +7,15 @@ Collection of backend apps to simulate MS ecosystem. We are using Terraform to d
 
 ## Architecture Flow
 
-The flow pipeline for our microservice ecosystem is the ![following](./ArchitectureFlow.jpg)
+Below we attach flow pipelines for the microservices:
+
+- ECS:
+![following](./ArchitectureFlow.jpg)
+
+- EKS
+
+- Serverless(API-Gateway and Lambdas)
+ ![following](./backend/serverless/serverless_aws_flow.png)
 
 ### Deploy services: ###
 
