@@ -128,3 +128,28 @@ variable "basic_auth_password" {
   type        = string
   sensitive   = true
 }
+
+
+variable "users_database_username" {
+  description = "The password for the users DB master"
+  type        = string
+  sensitive   = true
+}
+
+variable "users_database_password" {
+  description = "The password for the users DB master"
+  type        = string
+  sensitive   = true
+}
+
+variable "posts_database_username" {
+  description = "The password for the posts DB master"
+  type        = string
+  sensitive   = true
+}
+
+variable "posts_database_password" {
+  description = "The password for the posts DB master"
+  type        = string
+  sensitive   = true
+}
