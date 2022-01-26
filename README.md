@@ -9,12 +9,15 @@ Collection of backend apps to simulate microservices ecosystem. We are using Ter
 
 Below we attach flow pipelines for the microservices:
 
-- ECS
+### ECS
+ Cloud Architecture for ECS:
  ![following](./ArchitectureFlow.jpg)
 
-- EKS
+### EKS
+Cloud Architecture for EKS:
 
-- Serverless(API-Gateway and Lambdas)
+### Serverless (API-Gateway and Lambdas)
+Cloud Architecture for Serverless:
  ![following](./backend/serverless/serverless_aws_flow.png)
 
 ### Deploy services: ###
