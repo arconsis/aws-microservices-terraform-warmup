@@ -8,7 +8,7 @@ provider "aws" {
 # VPC Configuration
 ################################################################################
 module "networking" {
-  source               = "../modules/network"
+  source               = "../common/modules/network"
   create_vpc           = var.create_vpc
   create_igw           = var.create_igw
   single_nat_gateway   = var.single_nat_gateway
@@ -25,7 +25,7 @@ module "networking" {
 # SG Configuration
 ################################################################################
 module "private_vpc_sg" {
-  source                   = "../modules/security"
+  source                   = "../common/modules/security"
   create_vpc               = var.create_vpc
   create_sg                = true
   sg_name                  = "private-lambda-security-group"
@@ -149,9 +149,9 @@ resource "aws_s3_bucket_notification" "users_profile_images_notification" {
 ################################################################################
 # Database Configuration
 ################################################################################
-# Warehouse Database
+# Users Database
 module "users_database" {
-  source                = "../modules/database"
+  source                = "../common/modules/database"
   database_identifier   = "users-database"
   database_username     = var.users_database_username
   database_password     = var.users_database_password
@@ -160,8 +160,8 @@ module "users_database" {
   monitoring_role_name  = "UsersDatabaseMonitoringRole"
 }
 # Posts Database
-module "users_database" {
-  source                = "../modules/database"
+module "posts_database" {
+  source                = "../common/modules/database"
   database_identifier   = "posts-database"
   database_username     = var.posts_database_username
   database_password     = var.posts_database_password

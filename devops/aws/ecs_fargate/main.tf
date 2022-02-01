@@ -5,7 +5,7 @@ provider "aws" {
 }
 
 module "networking" {
-  source               = "../modules/network"
+  source               = "../common/modules/network"
   create_vpc           = var.create_vpc
   create_igw           = var.create_igw
   single_nat_gateway   = var.single_nat_gateway
@@ -80,7 +80,7 @@ resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
 }
 
 module "alb_sg" {
-  source                   = "../modules/security"
+  source                   = "../common/modules/security"
   create_vpc               = var.create_vpc
   create_sg                = true
   sg_name                  = "load-balancer-security-group"
@@ -99,7 +99,7 @@ module "alb_sg" {
 }
 
 module "ecs_tasks_sg" {
-  source                           = "../modules/security"
+  source                           = "../common/modules/security"
   create_vpc                       = var.create_vpc
   create_sg                        = true
   sg_name                          = "ecs-tasks-security-group"
@@ -119,7 +119,7 @@ module "ecs_tasks_sg" {
 }
 
 module "private_ecs_tasks_sg" {
-  source                   = "../modules/security"
+  source                   = "../common/modules/security"
   create_vpc               = var.create_vpc
   create_sg                = true
   sg_name                  = "ecs-private-tasks-security-group"
@@ -138,7 +138,7 @@ module "private_ecs_tasks_sg" {
 }
 
 module "public_alb" {
-  source             = "../modules/alb"
+  source             = "../common/modules/alb"
   create_alb         = var.create_alb
   load_balancer_type = "application"
   alb_name           = "main-ecs-lb"
@@ -161,7 +161,7 @@ module "public_alb" {
 }
 
 module "ecs_cluster" {
-  source                   = "../modules/ecs_cluster"
+  source                   = "../common/modules/ecs_cluster"
   project                  = var.project
   create_capacity_provider = false
 }
@@ -176,7 +176,7 @@ resource "aws_service_discovery_private_dns_namespace" "segment" {
 # BOOKS API ECS Service
 ################################################################################
 module "ecs_books_api_fargate" {
-  source                                  = "../modules/ecs"
+  source                                  = "../common/modules/ecs"
   aws_region                              = var.aws_region
   vpc_id                                  = module.networking.vpc_id
   cluster_id                              = module.ecs_cluster.cluster_id
@@ -229,7 +229,7 @@ module "ecs_books_api_fargate" {
 # PROMOTIONS API ECS Service
 ################################################################################
 module "ecs_promotions_api_fargate" {
-  source                                  = "../modules/ecs"
+  source                                  = "../common/modules/ecs"
   aws_region                              = var.aws_region
   vpc_id                                  = module.networking.vpc_id
   cluster_id                              = module.ecs_cluster.cluster_id
@@ -282,7 +282,7 @@ module "ecs_promotions_api_fargate" {
 # RECOMMENDATION API ECS Service
 ################################################################################
 module "ecs_recommendations_api_fargate" {
-  source                                  = "../modules/ecs"
+  source                                  = "../common/modules/ecs"
   aws_region                              = var.aws_region
   vpc_id                                  = module.networking.vpc_id
   cluster_id                              = module.ecs_cluster.cluster_id
@@ -335,7 +335,7 @@ module "ecs_recommendations_api_fargate" {
 # USERS API ECS Service
 ################################################################################
 module "ecs_users_api_fargate" {
-  source                                  = "../modules/ecs"
+  source                                  = "../common/modules/ecs"
   aws_region                              = var.aws_region
   vpc_id                                  = module.networking.vpc_id
   cluster_id                              = module.ecs_cluster.cluster_id
