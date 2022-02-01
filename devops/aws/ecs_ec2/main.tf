@@ -52,7 +52,7 @@ resource "aws_iam_instance_profile" "ecs_service_role" {
 }
 
 module "networking" {
-  source               = "../modules/network"
+  source               = "../common/modules/network"
   create_vpc           = var.create_vpc
   create_igw           = var.create_igw
   single_nat_gateway   = var.single_nat_gateway
@@ -66,7 +66,7 @@ module "networking" {
 }
 
 module "alb_sg" {
-  source                   = "../modules/security"
+  source                   = "../common/modules/security"
   create_vpc               = var.create_vpc
   create_sg                = true
   sg_name                  = "load-balancer-security-group"
@@ -85,7 +85,7 @@ module "alb_sg" {
 }
 
 module "ecs_tasks_sg" {
-  source                           = "../modules/security"
+  source                           = "../common/modules/security"
   create_vpc                       = var.create_vpc
   create_sg                        = true
   sg_name                          = "ecs-tasks-security-group"
@@ -105,7 +105,7 @@ module "ecs_tasks_sg" {
 }
 
 module "private_ecs_tasks_sg" {
-  source                   = "../modules/security"
+  source                   = "../common/modules/security"
   create_vpc               = var.create_vpc
   create_sg                = true
   sg_name                  = "ecs-private-tasks-security-group"
@@ -124,7 +124,7 @@ module "private_ecs_tasks_sg" {
 }
 
 module "public_alb" {
-  source             = "../modules/alb"
+  source             = "../common/modules/alb"
   create_alb         = var.create_alb
   load_balancer_type = "application"
   alb_name           = "main-ecs-lb"
@@ -165,7 +165,7 @@ data "aws_iam_policy_document" "ecs_task_execution_role" {
 }
 
 module "ec2_launch_configuration" {
-  source                     = "../modules/ec2"
+  source                     = "../common/modules/ec2"
   launch_configuration_name  = "ec2_ecs_launch_configuration"
   iam_ecs_service_role_name  = aws_iam_instance_profile.ecs_service_role.name
   security_groups_ids        = [module.ecs_tasks_sg.security_group_id]
@@ -176,7 +176,7 @@ module "ec2_launch_configuration" {
 }
 
 module "ecs_cluster" {
-  source                    = "../modules/ecs_cluster"
+  source                    = "../common/modules/ecs_cluster"
   project                   = var.project
   create_capacity_provider  = true
   capacity_provider_name    = "capacity-provider-ecs-ec2"
@@ -193,7 +193,7 @@ resource "aws_service_discovery_private_dns_namespace" "segment" {
 # BOOKS API ECS Service
 ################################################################################
 module "ecs_books_api_ec2" {
-  source                                  = "../modules/ecs"
+  source                                  = "../common/modules/ecs"
   aws_region                              = var.aws_region
   cluster_id                              = module.ecs_cluster.cluster_id
   vpc_id                                  = module.networking.vpc_id
@@ -241,7 +241,7 @@ module "ecs_books_api_ec2" {
 # RECOMMENDATION API ECS Service
 ################################################################################
 module "ecs_recommendations_api_ec2" {
-  source                                  = "../modules/ecs"
+  source                                  = "../common/modules/ecs"
   aws_region                              = var.aws_region
   vpc_id                                  = module.networking.vpc_id
   cluster_id                              = module.ecs_cluster.cluster_id
@@ -289,7 +289,7 @@ module "ecs_recommendations_api_ec2" {
 # USERS API ECS Service
 ################################################################################
 module "ecs_users_api_ec2" {
-  source                                  = "../modules/ecs"
+  source                                  = "../common/modules/ecs"
   aws_region                              = var.aws_region
   vpc_id                                  = module.networking.vpc_id
   cluster_id                              = module.ecs_cluster.cluster_id

@@ -12,17 +12,17 @@ Below we attach flow pipelines for the microservices:
 ### ECS
 Cloud Architecture for ECS:
  <br />
- ![following](./ECS_Cloud_Architecture.jpg)
+ ![following](./static/ECS_Cloud_Architecture.jpg)
 
 ### EKS
 Cloud Architecture for EKS:
  <br />
- ![following](./EKS_Cloud_Architecture.png)
+ ![following](./static/EKS_Cloud_Architecture.png)
 
 ### Serverless (API-Gateway and Lambdas)
 Cloud Architecture for Serverless:
  <br />
- ![following](./Serverless_Cloud_Architecture.png)
+ ![following](./static/Serverless_Cloud_Architecture.png)
 
 ### Deploy services: ###
 
