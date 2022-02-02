@@ -10,47 +10,47 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+    - name: Login to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Build and push booksService
-        uses: docker/build-push-action@v2
-        with:
-          context: ./
-          file: ./Dockerfile
-          builder: ${{ steps.buildx.outputs.name }}
-          push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/books:latest
-          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/books:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/books:buildcache,mode=max
-        working-directory: ./backend/apis/services/booksService
-      
-      - name: Build and push recommendationsService
-        uses: docker/build-push-action@v2
-        with:
-          context: ./
-          file: ./Dockerfile
-          builder: ${{ steps.buildx.outputs.name }}
-          push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/recommendations:latest
-          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/recommendations:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/recommendations:buildcache,mode=max
-        working-directory: ./backend/apis/services/recommendationsService
+    - name: Build and push booksService
+      uses: docker/build-push-action@v2
+      with:
+        context: ./
+        file: ./Dockerfile
+        builder: ${{ steps.buildx.outputs.name }}
+        push: true
+        tags: ${{ secrets.DOCKER_HUB_USERNAME }}/books:latest
+        cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/books:buildcache
+        cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/books:buildcache,mode=max
+      working-directory: ./backend/apis/services/booksService
+    
+    - name: Build and push recommendationsService
+      uses: docker/build-push-action@v2
+      with:
+        context: ./
+        file: ./Dockerfile
+        builder: ${{ steps.buildx.outputs.name }}
+        push: true
+        tags: ${{ secrets.DOCKER_HUB_USERNAME }}/recommendations:latest
+        cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/recommendations:buildcache
+        cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/recommendations:buildcache,mode=max
+      working-directory: ./backend/apis/services/recommendationsService
 
-      - name: Build and push usersService
-        uses: docker/build-push-action@v2
-        with:
-          context: ./
-          file: ./Dockerfile
-          builder: ${{ steps.buildx.outputs.name }}
-          push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/users:latest
-          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/users:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/users:buildcache,mode=max
-        working-directory: ./backend/apis/services/usersService
+    - name: Build and push usersService
+      uses: docker/build-push-action@v2
+      with:
+        context: ./
+        file: ./Dockerfile
+        builder: ${{ steps.buildx.outputs.name }}
+        push: true
+        tags: ${{ secrets.DOCKER_HUB_USERNAME }}/users:latest
+        cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/users:buildcache
+        cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/users:buildcache,mode=max
+      working-directory: ./backend/apis/services/usersService
