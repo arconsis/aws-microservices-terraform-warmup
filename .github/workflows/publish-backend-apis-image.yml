@@ -40,7 +40,6 @@ jobs:
         tags: ${{ secrets.DOCKER_HUB_USERNAME }}/recommendations:latest
         cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/recommendations:buildcache
         cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/recommendations:buildcache,mode=max
-      working-directory: ./backend/apis/services/recommendationsService
 
     - name: Build and push usersService
       uses: docker/build-push-action@v2
