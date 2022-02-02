@@ -22,19 +22,18 @@ jobs:
     - name: Build and push booksService
       uses: docker/build-push-action@v2
       with:
-        context: ./
+        context: ./backend/apis/services/booksService
         file: ./Dockerfile
         builder: ${{ steps.buildx.outputs.name }}
         push: true
         tags: ${{ secrets.DOCKER_HUB_USERNAME }}/books:latest
         cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/books:buildcache
         cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/books:buildcache,mode=max
-      working-directory: ./backend/apis/services/booksService
     
     - name: Build and push recommendationsService
       uses: docker/build-push-action@v2
       with:
-        context: ./
+        context: ./backend/apis/services/recommendationsService
         file: ./Dockerfile
         builder: ${{ steps.buildx.outputs.name }}
         push: true
@@ -46,11 +45,10 @@ jobs:
     - name: Build and push usersService
       uses: docker/build-push-action@v2
       with:
-        context: ./
+        context: ./backend/apis/services/usersService
         file: ./Dockerfile
         builder: ${{ steps.buildx.outputs.name }}
         push: true
         tags: ${{ secrets.DOCKER_HUB_USERNAME }}/users:latest
         cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/users:buildcache
         cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/users:buildcache,mode=max
-      working-directory: ./backend/apis/services/usersService
