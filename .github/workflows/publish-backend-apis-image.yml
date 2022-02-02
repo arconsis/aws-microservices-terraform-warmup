@@ -1,8 +1,8 @@
 name: Publish backend apis services to DockerHub
 
 on:
-  pull_request:
-    branches: [ master ]
+  push:
+    branches: [ main ]
 
 jobs:
   publish-apis-images:
@@ -31,7 +31,7 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         context: ./backend/apis/services/recommendationsService
-        file: ./Dockerfile
+        file: ./backend/apis/services/Dockerfile
         push: true
         tags: ${{ secrets.DOCKER_HUB_USERNAME }}/recommendations:latest
 
@@ -39,6 +39,14 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         context: ./backend/apis/services/usersService
-        file: ./Dockerfile
+        file: ./backend/apis/services/usersService/Dockerfile
         push: true
         tags: ${{ secrets.DOCKER_HUB_USERNAME }}/users:latest
+    
+    - name: Build and push promotionsService
+      uses: docker/build-push-action@v2
+      with:
+        context: ./backend/apis/services/promotionsService
+        file: ./backend/apis/services/promotionsService/Dockerfile
+        push: true
+        tags: ${{ secrets.DOCKER_HUB_USERNAME }}/promotions:latest
