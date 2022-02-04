@@ -41,3 +41,7 @@ In order to destroy clusters from AWS run the following cmd:
 ```shell
 destroy.sh
 ```
+
+## Show your support
+
+Give a ⭐️ if this project helped you!
