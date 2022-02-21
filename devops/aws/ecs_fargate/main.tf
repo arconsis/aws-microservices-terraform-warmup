@@ -137,6 +137,25 @@ module "private_ecs_tasks_sg" {
   egress_protocol          = "-1"
 }
 
+module "private_database_sg" {
+  source                   = "../common/modules/security"
+  create_vpc               = var.create_vpc
+  create_sg                = true
+  sg_name                  = "private-database-security-group"
+  description              = "Controls access to the private database (not internet facing)"
+  rule_ingress_description = "allow inbound access only from resources in VPC"
+  rule_egress_description  = "allow all outbound"
+  vpc_id                   = module.networking.vpc_id
+  ingress_cidr_blocks      = [var.cidr_block]
+  ingress_from_port        = 0
+  ingress_to_port          = 0
+  ingress_protocol         = "-1"
+  egress_cidr_blocks       = ["0.0.0.0/0"]
+  egress_from_port         = 0
+  egress_to_port           = 0
+  egress_protocol          = "-1"
+}
+
 module "public_alb" {
   source             = "../common/modules/alb"
   create_alb         = var.create_alb
@@ -173,6 +192,40 @@ resource "aws_service_discovery_private_dns_namespace" "segment" {
 }
 
 ################################################################################
+# Database Configuration
+################################################################################
+# Books Database
+module "books_database" {
+  source                = "../modules/database"
+  database_identifier   = "books-database"
+  database_username     = var.books_database_username
+  database_password     = var.books_database_password
+  subnet_ids            = module.networking.private_subnet_ids
+  security_group_ids    = [module.private_database_sg.security_group_id]
+  monitoring_role_name  = "BooksDatabaseMonitoringRole"
+}
+# Recommendations Database
+module "recommendations_database" {
+  source                = "../modules/database"
+  database_identifier   = "recommendations-database"
+  database_username     = var.recommendations_database_username
+  database_password     = var.recommendations_database_password
+  subnet_ids            = module.networking.private_subnet_ids
+  security_group_ids    = [module.private_database_sg.security_group_id]
+  monitoring_role_name  = "RecommendationsDatabaseMonitoringRole"
+}
+# Users Database
+module "users_database" {
+  source                = "../modules/database"
+  database_identifier   = "users-database"
+  database_username     = var.users_database_username
+  database_password     = var.users_database_password
+  subnet_ids            = module.networking.private_subnet_ids
+  security_group_ids    = [module.private_database_sg.security_group_id]
+  monitoring_role_name  = "UsersDatabaseMonitoringRole"
+}
+
+################################################################################
 # BOOKS API ECS Service
 ################################################################################
 module "ecs_books_api_fargate" {
@@ -199,7 +252,28 @@ module "ecs_books_api_fargate" {
   service_desired_count                   = var.books_api_desired_count
   service_max_count                       = var.books_api_max_count
   service_task_family                     = var.books_api_task_family
-  service_enviroment_variables            = []
+  service_enviroment_variables = [
+    {
+      "name" : "POSTGRES_USER",
+      "value" : module.books_database.db_instance_username,
+    },
+    {
+      "name" : "POSTGRES_PASSWORD",
+      "value" : module.books_database.db_master_password,
+    },
+    {
+      "name" : "POSTGRES_HOST",
+      "value" : module.books_database.db_instance_address,
+    },
+    {
+      "name" : "POSTGRES_DB",
+      "value" : module.books_database.db_instance_name,
+    },
+    {
+      "name" : "POSTGRES_PORT",
+      "value" : module.books_database.db_instance_port,
+    }
+  ]
   service_health_check_path               = var.books_api_health_check_path
   network_mode                            = var.books_api_network_mode
   task_compatibilities                    = var.books_api_task_compatibilities
@@ -305,7 +379,28 @@ module "ecs_recommendations_api_fargate" {
   service_desired_count                   = var.recommendations_api_desired_count
   service_max_count                       = var.recommendations_api_max_count
   service_task_family                     = var.recommendations_api_task_family
-  service_enviroment_variables            = []
+  service_enviroment_variables = [
+    {
+      "name" : "POSTGRES_USER",
+      "value" : module.recommendations_database.db_instance_username,
+    },
+    {
+      "name" : "POSTGRES_PASSWORD",
+      "value" : module.recommendations_database.db_master_password,
+    },
+    {
+      "name" : "POSTGRES_HOST",
+      "value" : module.recommendations_database.db_instance_address,
+    },
+    {
+      "name" : "POSTGRES_DB",
+      "value" : module.recommendations_database.db_instance_name,
+    },
+    {
+      "name" : "POSTGRES_PORT",
+      "value" : module.recommendations_database.db_instance_port,
+    }
+  ]
   service_health_check_path               = null
   network_mode                            = var.recommendations_api_network_mode
   task_compatibilities                    = var.recommendations_api_task_compatibilities
@@ -362,6 +457,26 @@ module "ecs_users_api_fargate" {
     {
       "name" : "RECOMMENDATIONS_SERVICE_URL",
       "value" : "http://${module.ecs_recommendations_api_fargate.aws_service_discovery_service_name}.${aws_service_discovery_private_dns_namespace.segment.name}:${var.recommendations_api_port}"
+    },
+    {
+      "name" : "POSTGRES_USER",
+      "value" : module.users_database.db_instance_username,
+    },
+    {
+      "name" : "POSTGRES_PASSWORD",
+      "value" : module.users_database.db_master_password,
+    },
+    {
+      "name" : "POSTGRES_HOST",
+      "value" : module.users_database.db_instance_address,
+    },
+    {
+      "name" : "POSTGRES_DB",
+      "value" : module.users_database.db_instance_name,
+    },
+    {
+      "name" : "POSTGRES_PORT",
+      "value" : module.users_database.db_instance_port,
     }
   ]
   service_health_check_path               = var.users_api_health_check_path
