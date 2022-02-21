@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: tf-tutorial
+  name: users-service-configmap
+data:
+  RECOMMENDATIONS_SERVICE_URL: "http://recommendations-service:3000"
+  POSTGRES_PORT: "5432"
+  POSTGRES_HOST: ""

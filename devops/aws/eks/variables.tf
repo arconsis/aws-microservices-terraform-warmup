@@ -83,3 +83,45 @@ variable "environment" {
   description = "Indicate the environment"
   default     = "dev"
 }
+
+################################################################################
+# Database Configuration
+################################################################################
+# Books DB
+variable "books_database_username" {
+  description = "The username for the books DB master"
+  type        = string
+  sensitive   = true
+}
+
+variable "books_database_password" {
+  description = "The password for the books DB master"
+  type        = string
+  sensitive   = true
+}
+
+# Recommendations DB
+variable "recommendations_database_username" {
+  description = "The username for the recommendations DB master"
+  type        = string
+  sensitive   = true
+}
+
+variable "recommendations_database_password" {
+  description = "The password for the recommendations DB master"
+  type        = string
+  sensitive   = true
+}
+
+# Users DB
+variable "users_database_username" {
+  description = "The username for the users DB master"
+  type        = string
+  sensitive   = true
+}
+
+variable "users_database_password" {
+  description = "The password for the users DB master"
+  type        = string
+  sensitive   = true
+}
