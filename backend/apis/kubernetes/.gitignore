@@ -1,0 +1,4 @@
+**/dev-secret.yaml
+**/stg-secret.yaml
+**/prod-secret.yaml
+**/secret.yaml

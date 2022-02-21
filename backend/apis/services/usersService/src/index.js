@@ -3,18 +3,39 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compress = require('compression')();
 const useragent = require('express-useragent');
+const { Sequelize, DataTypes } = require('sequelize');
 
-if(process.env.NODE_ENV !== 'production'){
-  require('dotenv').config()
-}
-
+// if(process.env.NODE_ENV !== 'production'){
+//   require('dotenv').config()
+// }
 const {
-  recommendationsService: recommendationsServiceConfig
+  recommendationsService: recommendationsServiceConfig,
+  database: databaseConfig,
 } = require('./configuration');
 const {
   makeGetRequest
 } = require('./common/utils');
 const users = require('./common/users');
+
+const PRODUCTION_ENV = 'production';
+const defaultOptions = {
+  dialect: 'postgres',
+  logging: true,
+  timezone: '+00:00',
+  dialectOptions: process.env.NODE_ENV === PRODUCTION_ENV
+    ? {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
+      },
+    }
+    : undefined,
+  define: {
+    freezeTableName: true,
+  },
+};
+
+const db = new Sequelize(databaseConfig.connectionString, defaultOptions);
 
 const app = express();
 app.use(useragent.express());
@@ -54,6 +75,15 @@ app.get('/users/health-check', async (req, res, next) => {
 
 const port = process.env.PORT || 3000;
 
-app.listen(port, () => {
-    console.log(`Listening on *:${port}`);
-});
+(async () => {
+  try {
+    await db.authenticate();
+    db.sync();
+    app.listen(port, () => {
+      console.log(`Listening on *:${port}`);
+    });
+  } catch (error) {
+    await db.close();
+    await db.connectionManager.close()
+  }
+})();
