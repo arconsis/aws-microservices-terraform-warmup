@@ -1,27 +1,66 @@
 version: '3.9'
 services:
+  users-db:
+    image: postgres:12.5
+    ports:
+      - "5432:5432"
+    restart: always
+    environment:
+      POSTGRES_DB: users-db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - postgres:/var/lib/postgresql/data
   users:
     build:
       context: ./usersService
       args:
           PORT: 3000
     env_file: ./usersService/.env
+    depends_on:
+      - users-db
     ports:
       - "3000:3000"
+  books-db:
+    image: postgres:12.5
+    ports:
+      - "5432:5432"
+    restart: always
+    environment:
+      POSTGRES_DB: books-db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - postgres:/var/lib/postgresql/data
   books:
     build:
       context: ./booksService
       args:
           PORT: 3000
     env_file: ./booksService/.env
+    depends_on:
+      - books-db
     ports:
       - "3001:3000"
+  recommendations-db:
+    image: postgres:12.5
+    ports:
+      - "5432:5432"
+    restart: always
+    environment:
+      POSTGRES_DB: recommendations-db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - postgres:/var/lib/postgresql/data
   recommendations:
     build:
       context: ./recommendationsService
       args:
           PORT: 3000
     env_file: ./recommendationsService/.env
+    depends_on:
+      - recommendations-db
     ports:
       - "3002:3000"
   promotions:
