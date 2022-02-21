@@ -196,7 +196,7 @@ resource "aws_service_discovery_private_dns_namespace" "segment" {
 ################################################################################
 # Books Database
 module "books_database" {
-  source                = "../modules/database"
+  source                = "../common/modules/database"
   database_identifier   = "books-database"
   database_username     = var.books_database_username
   database_password     = var.books_database_password
@@ -206,7 +206,7 @@ module "books_database" {
 }
 # Recommendations Database
 module "recommendations_database" {
-  source                = "../modules/database"
+  source                = "../common/modules/database"
   database_identifier   = "recommendations-database"
   database_username     = var.recommendations_database_username
   database_password     = var.recommendations_database_password
@@ -216,7 +216,7 @@ module "recommendations_database" {
 }
 # Users Database
 module "users_database" {
-  source                = "../modules/database"
+  source                = "../common/modules/database"
   database_identifier   = "users-database"
   database_username     = var.users_database_username
   database_password     = var.users_database_password
