@@ -255,23 +255,23 @@ module "ecs_books_api_fargate" {
   service_enviroment_variables = [
     {
       "name" : "POSTGRES_USER",
-      "value" : module.books_database.db_instance_username,
+      "value" : "${tostring(module.books_database.db_instance_username)}",
     },
     {
       "name" : "POSTGRES_PASSWORD",
-      "value" : module.books_database.db_master_password,
+      "value" : "${tostring(module.books_database.db_master_password)}",
     },
     {
       "name" : "POSTGRES_HOST",
-      "value" : module.books_database.db_instance_address,
+      "value" : "${tostring(module.books_database.db_instance_address)}",
     },
     {
       "name" : "POSTGRES_DB",
-      "value" : module.books_database.db_instance_name,
+      "value" : "${tostring(module.books_database.db_instance_name)}",
     },
     {
       "name" : "POSTGRES_PORT",
-      "value" : module.books_database.db_instance_port,
+      "value" : "${tostring(module.books_database.db_instance_port)}",
     }
   ]
   service_health_check_path               = var.books_api_health_check_path
@@ -382,23 +382,23 @@ module "ecs_recommendations_api_fargate" {
   service_enviroment_variables = [
     {
       "name" : "POSTGRES_USER",
-      "value" : module.recommendations_database.db_instance_username,
+      "value" : "${tostring(module.recommendations_database.db_instance_username)}",
     },
     {
       "name" : "POSTGRES_PASSWORD",
-      "value" : module.recommendations_database.db_master_password,
+      "value" : "${tostring(module.recommendations_database.db_master_password)}",
     },
     {
       "name" : "POSTGRES_HOST",
-      "value" : module.recommendations_database.db_instance_address,
+      "value" : "${tostring(module.recommendations_database.db_instance_address)}",
     },
     {
       "name" : "POSTGRES_DB",
-      "value" : module.recommendations_database.db_instance_name,
+      "value" : "${tostring(module.recommendations_database.db_instance_name)}",
     },
     {
       "name" : "POSTGRES_PORT",
-      "value" : module.recommendations_database.db_instance_port,
+      "value" : "${tostring(module.recommendations_database.db_instance_port)}",
     }
   ]
   service_health_check_path               = null
@@ -460,23 +460,23 @@ module "ecs_users_api_fargate" {
     },
     {
       "name" : "POSTGRES_USER",
-      "value" : module.users_database.db_instance_username,
+      "value" : "${tostring(module.users_database.db_instance_username)}",
     },
     {
       "name" : "POSTGRES_PASSWORD",
-      "value" : module.users_database.db_master_password,
+      "value" : "${tostring(module.users_database.db_master_password)}",
     },
     {
       "name" : "POSTGRES_HOST",
-      "value" : module.users_database.db_instance_address,
+      "value" : "${tostring(module.users_database.db_instance_address)}",
     },
     {
       "name" : "POSTGRES_DB",
-      "value" : module.users_database.db_instance_name,
+      "value" : "${tostring(module.users_database.db_instance_name)}",
     },
     {
       "name" : "POSTGRES_PORT",
-      "value" : module.users_database.db_instance_port,
+      "value" : "${tostring(module.users_database.db_instance_port)}",
     }
   ]
   service_health_check_path               = var.users_api_health_check_path
