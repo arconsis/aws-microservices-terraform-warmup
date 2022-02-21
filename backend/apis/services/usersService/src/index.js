@@ -4,10 +4,6 @@ const helmet = require('helmet');
 const compress = require('compression')();
 const useragent = require('express-useragent');
 const { Sequelize, DataTypes } = require('sequelize');
-
-// if(process.env.NODE_ENV !== 'production'){
-//   require('dotenv').config()
-// }
 const {
   recommendationsService: recommendationsServiceConfig,
   database: databaseConfig,

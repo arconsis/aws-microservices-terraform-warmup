@@ -8,11 +8,6 @@ const { Sequelize, DataTypes } = require('sequelize');
 const {
   database: databaseConfig,
 } = require('./configuration');
-
-// if(process.env.NODE_ENV !== 'production'){
-//   require('dotenv').config()
-// }
-
 const recommendations = require('./common/recommendations');
 
 const PRODUCTION_ENV = 'production';

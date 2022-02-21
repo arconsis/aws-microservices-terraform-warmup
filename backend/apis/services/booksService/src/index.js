@@ -9,10 +9,6 @@ const {
   database: databaseConfig,
 } = require('./configuration');
 
-// if(process.env.NODE_ENV !== 'production'){
-//   require('dotenv').config()
-// }
-
 const PRODUCTION_ENV = 'production';
 const defaultOptions = {
   dialect: 'postgres',
