@@ -14,11 +14,13 @@ const {
 const users = require('./common/users');
 
 const PRODUCTION_ENV = 'production';
+const isProduction = () => process.env.NODE_ENV === PRODUCTION_ENV;
+
 const defaultOptions = {
   dialect: 'postgres',
   logging: true,
   timezone: '+00:00',
-  dialectOptions: process.env.NODE_ENV === PRODUCTION_ENV
+  dialectOptions: isProduction()
     ? {
       ssl: {
         require: true,

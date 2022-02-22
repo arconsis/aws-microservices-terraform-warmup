@@ -168,6 +168,88 @@ module "public_alb" {
 ################################################################################
 # Database Configuration
 ################################################################################
+# Databases Secrets
+# https://www.sufle.io/blog/keeping-secrets-as-secret-on-amazon-ecs-using-terraform
+resource "aws_secretsmanager_secret" "books_database_password_secret" {
+  name = "books_database_master_password"
+}
+
+resource "aws_secretsmanager_secret_version" "books_database_password_secret_version" {
+  secret_id     = aws_secretsmanager_secret.books_database_password_secret.id
+  secret_string = var.books_database_password
+}
+
+resource "aws_secretsmanager_secret" "books_database_username_secret" {
+  name = "books_database_master_username"
+}
+
+resource "aws_secretsmanager_secret_version" "books_database_username_secret_version" {
+  secret_id     = aws_secretsmanager_secret.books_database_username_secret.id
+  secret_string = var.books_database_username
+}
+
+resource "aws_secretsmanager_secret" "users_database_password_secret" {
+  name = "users_database_master_password"
+}
+
+resource "aws_secretsmanager_secret_version" "users_database_password_secret_version" {
+  secret_id     = aws_secretsmanager_secret.users_database_password_secret.id
+  secret_string = var.users_database_password
+}
+
+resource "aws_secretsmanager_secret" "users_database_username_secret" {
+  name = "users_database_master_username"
+}
+
+resource "aws_secretsmanager_secret_version" "users_database_username_secret_version" {
+  secret_id     = aws_secretsmanager_secret.users_database_username_secret.id
+  secret_string = var.users_database_username
+}
+
+resource "aws_secretsmanager_secret" "recommendations_database_password_secret" {
+  name = "recommendations_database_master_password"
+}
+
+resource "aws_secretsmanager_secret_version" "recommendations_database_password_secret_version" {
+  secret_id     = aws_secretsmanager_secret.recommendations_database_password_secret.id
+  secret_string = var.recommendations_database_password
+}
+
+resource "aws_secretsmanager_secret" "recommendations_database_username_secret" {
+  name = "recommendations_database_master_username"
+}
+
+resource "aws_secretsmanager_secret_version" "recommendations_database_username_secret_version" {
+  secret_id     = aws_secretsmanager_secret.recommendations_database_username_secret.id
+  secret_string = var.recommendations_database_username
+}
+
+resource "aws_iam_role_policy" "password_policy_secretsmanager" {
+  name = "password-policy-secretsmanager"
+  role = aws_iam_role.ecs_task_execution_role.id
+
+  policy = <<-EOF
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Action": [
+          "secretsmanager:GetSecretValue"
+        ],
+        "Effect": "Allow",
+        "Resource": [
+          "${aws_secretsmanager_secret.books_database_username_secret.arn}",
+          "${aws_secretsmanager_secret.books_database_password_secret.arn}",
+          "${aws_secretsmanager_secret.users_database_username_secret.arn}",
+          "${aws_secretsmanager_secret.users_database_password_secret.arn}",
+          "${aws_secretsmanager_secret.recommendations_database_username_secret.arn}",
+          "${aws_secretsmanager_secret.recommendations_database_password_secret.arn}"
+        ]
+      }
+    ]
+  }
+  EOF
+}
 # Books Database
 module "books_database" {
   source                = "../modules/database"
@@ -271,14 +353,6 @@ module "ecs_books_api_ec2" {
   service_task_family                     = var.books_api_task_family
   service_enviroment_variables = [
     {
-      "name" : "POSTGRES_USER",
-      "value" : "${tostring(module.books_database.db_instance_username)}",
-    },
-    {
-      "name" : "POSTGRES_PASSWORD",
-      "value" : "${tostring(module.books_database.db_master_password)}",
-    },
-    {
       "name" : "POSTGRES_HOST",
       "value" : "${tostring(module.books_database.db_instance_address)}",
     },
@@ -289,6 +363,16 @@ module "ecs_books_api_ec2" {
     {
       "name" : "POSTGRES_PORT",
       "value" : "${tostring(module.books_database.db_instance_port)}",
+    }
+  ]
+  service_secrets_variables = [
+    {
+      "name" : "POSTGRES_USER",
+      "valueFrom" : "${aws_secretsmanager_secret.books_database_username_secret.arn}",
+    },
+    {
+      "name": "POSTGRES_PASSWORD",
+      "valueFrom": "${aws_secretsmanager_secret.books_database_password_secret.arn}",
     }
   ]
   service_health_check_path               = var.books_api_health_check_path
@@ -340,14 +424,6 @@ module "ecs_recommendations_api_ec2" {
   service_task_family                     = var.recommendations_api_task_family
   service_enviroment_variables = [
     {
-      "name" : "POSTGRES_USER",
-      "value" : "${tostring(module.recommendations_database.db_instance_username)}",
-    },
-    {
-      "name" : "POSTGRES_PASSWORD",
-      "value" : "${tostring(module.recommendations_database.db_master_password)}",
-    },
-    {
       "name" : "POSTGRES_HOST",
       "value" : "${tostring(module.recommendations_database.db_instance_address)}",
     },
@@ -358,6 +434,16 @@ module "ecs_recommendations_api_ec2" {
     {
       "name" : "POSTGRES_PORT",
       "value" : "${tostring(module.recommendations_database.db_instance_port)}",
+    }
+  ]
+  service_secrets_variables = [
+    {
+      "name" : "POSTGRES_USER",
+      "valueFrom" : "${aws_secretsmanager_secret.recommendations_database_username_secret.arn}",
+    },
+    {
+      "name": "POSTGRES_PASSWORD",
+      "valueFrom": "${aws_secretsmanager_secret.recommendations_database_password_secret.arn}",
     }
   ]
   service_health_check_path               = null
@@ -413,14 +499,6 @@ module "ecs_users_api_ec2" {
       "value" : "http://${module.ecs_recommendations_api_ec2.aws_service_discovery_service_name}.${aws_service_discovery_private_dns_namespace.segment.name}:${var.recommendations_api_port}"
     },
     {
-      "name" : "POSTGRES_USER",
-      "value" : "${tostring(module.users_database.db_instance_username)}",
-    },
-    {
-      "name" : "POSTGRES_PASSWORD",
-      "value" : "${tostring(module.users_database.db_master_password)}",
-    },
-    {
       "name" : "POSTGRES_HOST",
       "value" : "${tostring(module.users_database.db_instance_address)}",
     },
@@ -431,6 +509,16 @@ module "ecs_users_api_ec2" {
     {
       "name" : "POSTGRES_PORT",
       "value" : "${tostring(module.users_database.db_instance_port)}",
+    }
+  ]
+  service_secrets_variables = [
+    {
+      "name" : "POSTGRES_USER",
+      "valueFrom" : "${aws_secretsmanager_secret.users_database_username_secret.arn}",
+    },
+    {
+      "name": "POSTGRES_PASSWORD",
+      "valueFrom": "${aws_secretsmanager_secret.users_database_password_secret.arn}",
     }
   ]
   service_health_check_path               = var.users_api_health_check_path

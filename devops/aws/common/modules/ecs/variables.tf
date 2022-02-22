@@ -104,6 +104,11 @@ variable "service_enviroment_variables" {
   description = "Defines service enviroment variables"
 }
 
+variable "service_secrets_variables" {
+  description = "Defines service secret variables"
+  default     = []
+}
+
 variable "service_health_check_path" {
   description = "Path for health check"
   type        = string
