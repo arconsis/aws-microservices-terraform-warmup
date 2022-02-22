@@ -137,6 +137,25 @@ module "private_ecs_tasks_sg" {
   egress_protocol          = "-1"
 }
 
+module "private_database_sg" {
+  source                   = "../common/modules/security"
+  create_vpc               = var.create_vpc
+  create_sg                = true
+  sg_name                  = "private-database-security-group"
+  description              = "Controls access to the private database (not internet facing)"
+  rule_ingress_description = "allow inbound access only from resources in VPC"
+  rule_egress_description  = "allow all outbound"
+  vpc_id                   = module.networking.vpc_id
+  ingress_cidr_blocks      = [var.cidr_block]
+  ingress_from_port        = 0
+  ingress_to_port          = 0
+  ingress_protocol         = "-1"
+  egress_cidr_blocks       = ["0.0.0.0/0"]
+  egress_from_port         = 0
+  egress_to_port           = 0
+  egress_protocol          = "-1"
+}
+
 module "public_alb" {
   source             = "../common/modules/alb"
   create_alb         = var.create_alb
@@ -173,6 +192,123 @@ resource "aws_service_discovery_private_dns_namespace" "segment" {
 }
 
 ################################################################################
+# Database Configuration
+################################################################################
+# Databases Secrets
+# https://www.sufle.io/blog/keeping-secrets-as-secret-on-amazon-ecs-using-terraform
+resource "aws_secretsmanager_secret" "books_database_password_secret" {
+  name = "books_database_master_password"
+}
+
+resource "aws_secretsmanager_secret_version" "books_database_password_secret_version" {
+  secret_id     = aws_secretsmanager_secret.books_database_password_secret.id
+  secret_string = var.books_database_password
+}
+
+resource "aws_secretsmanager_secret" "books_database_username_secret" {
+  name = "books_database_master_username"
+}
+
+resource "aws_secretsmanager_secret_version" "books_database_username_secret_version" {
+  secret_id     = aws_secretsmanager_secret.books_database_username_secret.id
+  secret_string = var.books_database_username
+}
+
+resource "aws_secretsmanager_secret" "users_database_password_secret" {
+  name = "users_database_master_password"
+}
+
+resource "aws_secretsmanager_secret_version" "users_database_password_secret_version" {
+  secret_id     = aws_secretsmanager_secret.users_database_password_secret.id
+  secret_string = var.users_database_password
+}
+
+resource "aws_secretsmanager_secret" "users_database_username_secret" {
+  name = "users_database_master_username"
+}
+
+resource "aws_secretsmanager_secret_version" "users_database_username_secret_version" {
+  secret_id     = aws_secretsmanager_secret.users_database_username_secret.id
+  secret_string = var.users_database_username
+}
+
+resource "aws_secretsmanager_secret" "recommendations_database_password_secret" {
+  name = "recommendations_database_master_password"
+}
+
+resource "aws_secretsmanager_secret_version" "recommendations_database_password_secret_version" {
+  secret_id     = aws_secretsmanager_secret.recommendations_database_password_secret.id
+  secret_string = var.recommendations_database_password
+}
+
+resource "aws_secretsmanager_secret" "recommendations_database_username_secret" {
+  name = "recommendations_database_master_username"
+}
+
+resource "aws_secretsmanager_secret_version" "recommendations_database_username_secret_version" {
+  secret_id     = aws_secretsmanager_secret.recommendations_database_username_secret.id
+  secret_string = var.recommendations_database_username
+}
+
+resource "aws_iam_role_policy" "password_policy_secretsmanager" {
+  name = "password-policy-secretsmanager"
+  role = aws_iam_role.ecs_task_execution_role.id
+
+  policy = <<-EOF
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Action": [
+          "secretsmanager:GetSecretValue"
+        ],
+        "Effect": "Allow",
+        "Resource": [
+          "${aws_secretsmanager_secret.books_database_username_secret.arn}",
+          "${aws_secretsmanager_secret.books_database_password_secret.arn}",
+          "${aws_secretsmanager_secret.users_database_username_secret.arn}",
+          "${aws_secretsmanager_secret.users_database_password_secret.arn}",
+          "${aws_secretsmanager_secret.recommendations_database_username_secret.arn}",
+          "${aws_secretsmanager_secret.recommendations_database_password_secret.arn}"
+        ]
+      }
+    ]
+  }
+  EOF
+}
+
+# Books Database
+module "books_database" {
+  source                = "../common/modules/database"
+  database_identifier   = "books-database"
+  database_username     = var.books_database_username
+  database_password     = var.books_database_password
+  subnet_ids            = module.networking.private_subnet_ids
+  security_group_ids    = [module.private_database_sg.security_group_id]
+  monitoring_role_name  = "BooksDatabaseMonitoringRole"
+}
+# Recommendations Database
+module "recommendations_database" {
+  source                = "../common/modules/database"
+  database_identifier   = "recommendations-database"
+  database_username     = var.recommendations_database_username
+  database_password     = var.recommendations_database_password
+  subnet_ids            = module.networking.private_subnet_ids
+  security_group_ids    = [module.private_database_sg.security_group_id]
+  monitoring_role_name  = "RecommendationsDatabaseMonitoringRole"
+}
+# Users Database
+module "users_database" {
+  source                = "../common/modules/database"
+  database_identifier   = "users-database"
+  database_username     = var.users_database_username
+  database_password     = var.users_database_password
+  subnet_ids            = module.networking.private_subnet_ids
+  security_group_ids    = [module.private_database_sg.security_group_id]
+  monitoring_role_name  = "UsersDatabaseMonitoringRole"
+}
+
+################################################################################
 # BOOKS API ECS Service
 ################################################################################
 module "ecs_books_api_fargate" {
@@ -199,7 +335,30 @@ module "ecs_books_api_fargate" {
   service_desired_count                   = var.books_api_desired_count
   service_max_count                       = var.books_api_max_count
   service_task_family                     = var.books_api_task_family
-  service_enviroment_variables            = []
+  service_enviroment_variables = [
+    {
+      "name" : "POSTGRES_HOST",
+      "value" : "${tostring(module.books_database.db_instance_address)}",
+    },
+    {
+      "name" : "POSTGRES_DB",
+      "value" : "${tostring(module.books_database.db_instance_name)}",
+    },
+    {
+      "name" : "POSTGRES_PORT",
+      "value" : "${tostring(module.books_database.db_instance_port)}",
+    }
+  ]
+  service_secrets_variables = [
+    {
+      "name" : "POSTGRES_USER",
+      "valueFrom" : "${aws_secretsmanager_secret.books_database_username_secret.arn}",
+    },
+    {
+      "name": "POSTGRES_PASSWORD",
+      "valueFrom": "${aws_secretsmanager_secret.books_database_password_secret.arn}",
+    }
+  ]
   service_health_check_path               = var.books_api_health_check_path
   network_mode                            = var.books_api_network_mode
   task_compatibilities                    = var.books_api_task_compatibilities
@@ -305,7 +464,30 @@ module "ecs_recommendations_api_fargate" {
   service_desired_count                   = var.recommendations_api_desired_count
   service_max_count                       = var.recommendations_api_max_count
   service_task_family                     = var.recommendations_api_task_family
-  service_enviroment_variables            = []
+  service_enviroment_variables = [
+    {
+      "name" : "POSTGRES_HOST",
+      "value" : "${tostring(module.recommendations_database.db_instance_address)}",
+    },
+    {
+      "name" : "POSTGRES_DB",
+      "value" : "${tostring(module.recommendations_database.db_instance_name)}",
+    },
+    {
+      "name" : "POSTGRES_PORT",
+      "value" : "${tostring(module.recommendations_database.db_instance_port)}",
+    }
+  ]
+  service_secrets_variables = [
+    {
+      "name" : "POSTGRES_USER",
+      "valueFrom" : "${aws_secretsmanager_secret.recommendations_database_username_secret.arn}",
+    },
+    {
+      "name": "POSTGRES_PASSWORD",
+      "valueFrom": "${aws_secretsmanager_secret.recommendations_database_password_secret.arn}",
+    }
+  ]
   service_health_check_path               = null
   network_mode                            = var.recommendations_api_network_mode
   task_compatibilities                    = var.recommendations_api_task_compatibilities
@@ -362,6 +544,28 @@ module "ecs_users_api_fargate" {
     {
       "name" : "RECOMMENDATIONS_SERVICE_URL",
       "value" : "http://${module.ecs_recommendations_api_fargate.aws_service_discovery_service_name}.${aws_service_discovery_private_dns_namespace.segment.name}:${var.recommendations_api_port}"
+    },
+    {
+      "name" : "POSTGRES_HOST",
+      "value" : "${tostring(module.users_database.db_instance_address)}",
+    },
+    {
+      "name" : "POSTGRES_DB",
+      "value" : "${tostring(module.users_database.db_instance_name)}",
+    },
+    {
+      "name" : "POSTGRES_PORT",
+      "value" : "${tostring(module.users_database.db_instance_port)}",
+    }
+  ]
+  service_secrets_variables = [
+    {
+      "name" : "POSTGRES_USER",
+      "valueFrom" : "${aws_secretsmanager_secret.users_database_username_secret.arn}",
+    },
+    {
+      "name": "POSTGRES_PASSWORD",
+      "valueFrom": "${aws_secretsmanager_secret.users_database_password_secret.arn}",
     }
   ]
   service_health_check_path               = var.users_api_health_check_path

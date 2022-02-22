@@ -37,6 +37,7 @@ data "template_file" "this" {
     aws_logs_group     = var.service_aws_logs_group
     network_mode       = var.network_mode
     service_enviroment = jsonencode(var.service_enviroment_variables)
+    service_secrets    = jsonencode(var.service_secrets_variables)
   }
 }
 

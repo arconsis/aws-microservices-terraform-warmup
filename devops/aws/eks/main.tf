@@ -40,6 +40,62 @@ module "networking" {
   }
 }
 
+################################################################################
+# Security Groups
+################################################################################
+module "private_database_sg" {
+  source                   = "../common/modules/security"
+  create_vpc               = var.create_vpc
+  create_sg                = true
+  sg_name                  = "private-database-security-group"
+  description              = "Controls access to the private database (not internet facing)"
+  rule_ingress_description = "allow inbound access only from resources in VPC"
+  rule_egress_description  = "allow all outbound"
+  vpc_id                   = module.networking.vpc_id
+  ingress_cidr_blocks      = [var.cidr_block]
+  ingress_from_port        = 0
+  ingress_to_port          = 0
+  ingress_protocol         = "-1"
+  egress_cidr_blocks       = ["0.0.0.0/0"]
+  egress_from_port         = 0
+  egress_to_port           = 0
+  egress_protocol          = "-1"
+}
+
+################################################################################
+# Database Configuration
+################################################################################
+# Books Database
+module "books_database" {
+  source                = "../common/modules/database"
+  database_identifier   = "books-database"
+  database_username     = var.books_database_username
+  database_password     = var.books_database_password
+  subnet_ids            = module.networking.private_subnet_ids
+  security_group_ids    = [module.private_database_sg.security_group_id]
+  monitoring_role_name  = "BooksDatabaseMonitoringRole"
+}
+# Recommendations Database
+module "recommendations_database" {
+  source                = "../common/modules/database"
+  database_identifier   = "recommendations-database"
+  database_username     = var.recommendations_database_username
+  database_password     = var.recommendations_database_password
+  subnet_ids            = module.networking.private_subnet_ids
+  security_group_ids    = [module.private_database_sg.security_group_id]
+  monitoring_role_name  = "RecommendationsDatabaseMonitoringRole"
+}
+# Users Database
+module "users_database" {
+  source                = "../common/modules/database"
+  database_identifier   = "users-database"
+  database_username     = var.users_database_username
+  database_password     = var.users_database_password
+  subnet_ids            = module.networking.private_subnet_ids
+  security_group_ids    = [module.private_database_sg.security_group_id]
+  monitoring_role_name  = "UsersDatabaseMonitoringRole"
+}
+
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
   version         = "17.24.0"

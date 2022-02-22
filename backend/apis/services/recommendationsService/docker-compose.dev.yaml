@@ -1,0 +1,15 @@
+version: '3.9'
+services:
+  postgres:
+    image: postgres:12.5
+    ports:
+      - "5432:5432"
+    restart: always
+    environment:
+      POSTGRES_DB: recommendations-db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - postgres:/var/lib/postgresql/data
+volumes:
+  postgres: ~

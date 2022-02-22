@@ -25,6 +25,9 @@
     "express": "^4.17.1",
     "express-useragent": "^1.0.15",
     "helmet": "^4.6.0",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.1",
+    "pg": "^8.7.3",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.16.2"
   }
 }

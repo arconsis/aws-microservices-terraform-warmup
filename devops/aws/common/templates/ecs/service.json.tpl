@@ -19,6 +19,7 @@
         "hostPort": ${host_port}
       }
     ],
-    "environment": ${service_enviroment}
+    "environment": ${service_enviroment},
+    "secrets": ${service_secrets}
   }
 ]
