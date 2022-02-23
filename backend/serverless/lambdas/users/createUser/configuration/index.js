@@ -7,6 +7,10 @@ const config = {
       region: process.env.AWS_SQS_REGION,
       queueURL: process.env.AWS_SQS_QUEUE_URL,
     },
+    sns: {
+      region: process.env.AWS_SNS_REGION,
+      topicArn: process.env.AWS_SNS_TOPIC_ARN,
+    },
   },
 };
 

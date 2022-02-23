@@ -9,7 +9,7 @@
   "author": "Dimos Botsaris <botsaris.d@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "@aws-sdk/client-sqs": "^3.29.0",
+    "aws-sdk": "^2.1079.0",
     "dotenv": "^8.2.0",
     "throw-http-errors": "^2.0.0",
     "validator": "^13.6.0"

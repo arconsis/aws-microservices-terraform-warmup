@@ -2,12 +2,15 @@ const {
   USER_ROLE,
 } = require('../../common/constants');
 const {
-  toQueueMessage,
-} = require('../../data/repositories/queue/mapper');
+  aws: awsConfig,
+} = require('../../configuration');
+const {
+  toQueueMessageAttributes,
+} = require('../../data/repositories/notifications/mapper');
 
 function init({
   usersRepository,
-  queueRepository,
+  notificationsRepository,
 }) {
   async function createUser({
     firstName,
@@ -29,8 +32,8 @@ function init({
       userId: user.userId,
       email: user.email,
     };
-    const body = `Create default post for user with id: ${user.userId}`;
-    await queueRepository.sendMessage(toQueueMessage(msg), body);
+    const message = `Create default post for user with id: ${user.userId}`;
+    await notificationsRepository.publishMessage(toQueueMessageAttributes(msg), message, awsConfig.sns.topicArn);
     return user;
   }
 

@@ -16,7 +16,7 @@ let database;
 let postsRepository;
 let postsService;
 
-function getPayloadAsJSON(str) {
+function getJSON(str) {
   try {
     return JSON.parse(str);
   } catch (error) {
@@ -25,8 +25,12 @@ function getPayloadAsJSON(str) {
 }
 
 function extractUserPKFromRecord(record) {
-  if (record && record.messageAttributes && record.messageAttributes.Id && record.messageAttributes.Id.stringValue) {
-    return record.messageAttributes.Id.stringValue;
+  if (record && record.body) {
+    const body = getJSON(record.body);
+    console.log('body', body);
+    if (body && body.MessageAttributes && body.MessageAttributes.Id && body.MessageAttributes.Id.Value) {
+      return body.MessageAttributes.Id.Value;
+    }
   }
   return undefined;
 }
@@ -34,7 +38,7 @@ function extractUserPKFromRecord(record) {
 async function handleRequestFromApiGW(event) {
   logging.log('Handle request from API GW');
   isAbleToCreatePost(event);
-  const decodedEvent = getPayloadAsJSON(event.body);
+  const decodedEvent = getJSON(event.body);
   validations.assertCreatePostPayload(decodedEvent);
   const postResponse = await postsService.createPost({
     title: decodedEvent.title,
