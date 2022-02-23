@@ -7,8 +7,8 @@ const config = {
     },
     posts: {
       uri: `postgres://${process.env.POSTS_DB_USER}:${process.env.POSTS_DB_PASS}@${process.env.POSTS_DB_HOST}:${process.env.POSTS_DB_PORT}/${process.env.POSTS_DB_NAME}`
-    }
-  }
+    },
+  },
 };
 
 module.exports = config;
