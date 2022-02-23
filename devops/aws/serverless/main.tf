@@ -340,6 +340,59 @@ module "login" {
   }
 }
 ################################################################################
+# HELPER Lambdas
+################################################################################
+module "run_db_migrations" {
+  source = "terraform-aws-modules/lambda/aws"
+
+  function_name = "run-db-migrations"
+  description   = "Run database migrations"
+  handler       = "index.handler"
+  runtime       = "nodejs14.x"
+  publish       = true
+  timeout       = 60
+
+  source_path = "../../../backend/serverless/lambdas/helper/database/runMigrations"
+
+  store_on_s3 = true
+  s3_bucket   = "my-bucket-id-with-lambda-builds"
+
+  vpc_subnet_ids         = module.networking.private_subnet_ids
+  vpc_security_group_ids = [module.private_vpc_sg.security_group_id]
+  attach_network_policy = true
+
+  allowed_triggers = {
+    AllowExecutionFromAPIGateway = {
+      service    = "apigateway"
+      source_arn = "${module.api_gateway.apigatewayv2_api_execution_arn}/*/*/*"
+    }
+  }
+
+  attach_dead_letter_policy = false
+
+  layers = [
+    module.lambda_layer_logging.lambda_layer_arn,
+    module.lambda_layer_users_database.lambda_layer_arn,
+    module.lambda_layer_posts_database.lambda_layer_arn
+  ]
+
+  depends_on = [module.users_database]
+
+  environment_variables = {
+    USERS_DB_HOST = module.users_database.db_instance_address,
+    USERS_DB_PORT = module.users_database.db_instance_port,
+    USERS_DB_NAME = module.users_database.db_instance_name,
+    USERS_DB_USER = module.users_database.db_instance_username,
+    USERS_DB_PASS = module.users_database.db_master_password,
+    POSTS_DB_HOST = module.posts_database.db_instance_address,
+    POSTS_DB_PORT = module.posts_database.db_instance_port,
+    POSTS_DB_NAME = module.posts_database.db_instance_name,
+    POSTS_DB_USER = module.posts_database.db_instance_username,
+    POSTS_DB_PASS = module.posts_database.db_master_password
+  }
+}
+
+################################################################################
 # ADMINS Lambdas
 ################################################################################
 module "create_admin_lambda" {
@@ -766,6 +819,14 @@ module "api_gateway" {
       lambda_arn             = module.login.lambda_function_invoke_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
+    }
+    # Admins
+    "POST /databases/migrations" = {
+      lambda_arn             = module.run_db_migrations.lambda_function_invoke_arn
+      payload_format_version = "2.0"
+      timeout_milliseconds   = 12000
+      authorization_type     = "CUSTOM"
+      authorizer_id          = aws_apigatewayv2_authorizer.basic_auth.id
     }
     # Admins
     "POST /admins" = {
