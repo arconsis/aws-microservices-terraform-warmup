@@ -63,8 +63,16 @@ module "users_thumbnails_images_bucket" {
 }
 
 ################################################################################
+# SNS Queue Configuration
+################################################################################
+resource "aws_sns_topic" "new_user_added_topic" {
+  name = "new-user-added-topic"
+}
+
+################################################################################
 # SQS Queue Configuration
 ################################################################################
+# Users Profile Image Queue
 resource "aws_sqs_queue" "users_profile_images_queue" {
   name = "users-profile-images"
 
@@ -87,50 +95,59 @@ resource "aws_sqs_queue" "users_profile_images_queue" {
 POLICY
 }
 
+# New User Queue
 resource "aws_sqs_queue" "users_demo_post_queue" {
   name = "users-demo-posts"
+}
 
-  # SQS Policy to specify that lambda (create_user) can send messages to this queue
+resource "aws_sqs_queue_policy" "users_demo_post_queue_policy" {
+  queue_url = "${aws_sqs_queue.users_demo_post_queue.id}"
+  # 1. SQS Policy that is needed for our SQS to actually receive events from the SNS topic
+  # 2. SQS Policy to specify that lambda (create_user) can send messages to this queue
   policy = <<POLICY
 {
   "Version": "2012-10-17",
+  "Id": "sqspolicy",
   "Statement": [
+    {
+      "Sid": "First",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "sqs:SendMessage",
+      "Resource": "${aws_sqs_queue.users_demo_post_queue.arn}",
+      "Condition": {
+        "ArnEquals": {
+          "aws:SourceArn": "${aws_sns_topic.new_user_added_topic.arn}"
+        }
+      }
+    },
     {
       "Effect": "Allow",
       "Principal": "*",
       "Action": "sqs:SendMessage",
       "Resource": "arn:aws:sqs:*:*:users-demo-posts",
       "Condition": {
-        "ArnEquals": { "aws:SourceArn": "${module.create_user_lambda.lambda_function_invoke_arn}" }
+        "ArnEquals": {
+          "aws:SourceArn": "${module.create_user_lambda.lambda_function_invoke_arn}" 
+        }
       }
     }
   ]
 }
 POLICY
 }
-# SQS Policy to specify that everything in VPC can send messages to this queue
-# policy = <<POLICY
-#   {
-#   "Version": "2012-10-17",
-#   "Statement": [
-#     {
-#       "Action": [
-#         "sqs:SendMessage"
-#       ],
-#       "Effect": "Allow",
-#       "Resource": "arn:aws:sqs:*:*:users-demo-posts",
-#       "Condition": {
-#         "StringEquals": {
-#           "aws:SourceVpc": "${module.networking.vpc_id}"
-#         }
-#       },
-#       "Principal": "*"
-#     }
-#   ]
-# }
-# POLICY
 
+# DLQ for New User Queue
+resource "aws_sqs_queue" "users_demo_post_dlq" {
+  name = "users-demo-posts-dlq"
+}
 
+# subscription, which will allow our SQS queue to receive notifications from the SNS topic we created above
+resource "aws_sns_topic_subscription" "users_demo_post_queue_target" {
+  topic_arn = "${aws_sns_topic.new_user_added_topic.arn}"
+  protocol  = "sqs"
+  endpoint  = "${aws_sqs_queue.users_demo_post_queue.arn}"
+}
 
 ################################################################################
 # S3 - SQS Notifications
@@ -474,8 +491,18 @@ module "create_user_lambda" {
     sqs = {
       effect    = "Allow",
       actions   = ["sqs:*"],
-      resources = ["arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${aws_sqs_queue.users_demo_post_queue.name}"]
-    }
+      resources = [aws_sqs_queue.users_demo_post_queue.arn]
+    },
+    sns_new_user = {
+      effect    = "Allow",
+      actions   = ["sns:*"],
+      resources = [aws_sns_topic.new_user_added_topic.arn]
+    },
+    sqs_failure = {
+      effect    = "Allow",
+      actions   = ["sqs:SendMessage"],
+      resources = [aws_sqs_queue.users_demo_post_dlq.arn]
+    },
   }
 
   layers = [
@@ -491,7 +518,10 @@ module "create_user_lambda" {
     DB_NAME = module.users_database.db_instance_name,
     DB_USER = module.users_database.db_instance_username,
     DB_PASS = module.users_database.db_master_password,
+    AWS_SNS_REGION = var.aws_region
+    AWS_SNS_TOPIC_ARN = "${aws_sns_topic.new_user_added_topic.arn}"
     AWS_SQS_REGION = var.aws_region
+    # check if SQS_QUEUE_URL is exported from resource -> then no need of aws_account_id
     AWS_SQS_QUEUE_URL = "https://sqs.${var.aws_region}.amazonaws.com/${var.aws_account_id}/users-demo-posts"
   }
 }

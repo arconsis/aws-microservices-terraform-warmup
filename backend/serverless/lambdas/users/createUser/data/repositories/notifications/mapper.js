@@ -8,10 +8,10 @@ const {
 
 const createQueueMessage = (type, value) => ({
   DataType: type,
-  StringValue: value,
+  StringValue: `${value}`,
 });
 
-const toQueueMessage = function toQueueMessage(message) {
+const toQueueMessageAttributes = function toQueueMessage(message) {
   const queueMessage = {};
   for (const property in message) {
     const type = typeof message[property];
@@ -22,5 +22,5 @@ const toQueueMessage = function toQueueMessage(message) {
 
 
 module.exports = {
-  toQueueMessage,
+  toQueueMessageAttributes,
 };
