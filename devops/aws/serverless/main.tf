@@ -372,7 +372,8 @@ module "run_db_migrations" {
 
   layers = [
     module.lambda_layer_logging.lambda_layer_arn,
-    module.lambda_layer_users_database.lambda_layer_arn
+    module.lambda_layer_users_database.lambda_layer_arn,
+    module.lambda_layer_posts_database.lambda_layer_arn
   ]
 
   depends_on = [module.users_database]

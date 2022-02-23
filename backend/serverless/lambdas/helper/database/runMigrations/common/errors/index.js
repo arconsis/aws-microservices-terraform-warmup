@@ -8,27 +8,8 @@ const isHttpError = (error) => {
   return false;
 };
 
-const createResponseError = (err) => ({
-  statusCode: err.status,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    data: {
-      code: err.code,
-      message: err.message,
-    },
-  }),
-});
-
-function errorHandler(err) {
-  const internalError = new httpErrors.InternalServerError(err.message);
-  return isHttpError(err) ? createResponseError(err) : createResponseError(internalError);
-}
-
 module.exports = Object.assign(
   {},
-  errorHandler,
   httpErrors,
   {
     isHttpError,

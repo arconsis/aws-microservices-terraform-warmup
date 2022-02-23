@@ -1,15 +1,31 @@
 const usersDatabaseFactory = require('usersDatabase');
 const postsDatabaseFactory = require('postsDatabase');
 const logging = require('./common/logging');
-const {
-  errorHandler,
-} = require('./common/errors');
+const errors = require('./common/errors');
 const {
   database: databaseConfig,
 } = require('./configuration');
 
 function sleep(millis) {
   return new Promise((resolve) => setTimeout(resolve, millis));
+}
+
+const createResponseError = (err) => ({
+  statusCode: err.status,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    data: {
+      code: err.code,
+      message: err.message,
+    },
+  }),
+});
+
+function errorHandler(err) {
+  const internalError = new errors.InternalServerError(err.message);
+  return errors.isHttpError(err) ? createResponseError(err) : createResponseError(internalError);
 }
 
 const dbSettings = {
@@ -37,8 +53,9 @@ exports.handler = async function createAdmin(event, context) {
       postsDatabase.authenticate(),
     ]);
     logging.log('Connection has been established successfully.');
-    usersDatabase.sync(false, true);
-    postsDatabase.sync(false, true);
+    usersDatabase.sync(true, false);
+    postsDatabase.sync(true, false);
+    logging.log('Synchronization has been made successfully.');
     await sleep(10000);
     await Promise.all([
       usersDatabase.close(),

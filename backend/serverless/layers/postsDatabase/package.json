@@ -13,10 +13,10 @@
     "lodash": "^4.17.15",
     "pg": "^8.7.1",
     "pg-hstore": "^2.3.4",
-    "sequelize": "5.21.10"
+    "sequelize": "^5.22.5"
   },
   "devDependencies": {
-    "eslint": "^5.12.0",
+    "eslint": "^8.9.0",
     "eslint-config-airbnb": "^15.1.0",
     "eslint-plugin-import": "^2.17.2",
     "eslint-plugin-jsx-a11y": "^6.2.1",
