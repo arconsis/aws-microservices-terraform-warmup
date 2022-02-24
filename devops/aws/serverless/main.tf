@@ -1,3 +1,10 @@
+################################################################################
+################################################################################
+################################################################################
+# PROVIDER CONFIGURATION
+################################################################################
+################################################################################
+################################################################################
 provider "aws" {
   shared_credentials_file = "$HOME/.aws/credentials"
   profile                 = "default"
@@ -5,7 +12,11 @@ provider "aws" {
 }
 
 ################################################################################
-# VPC Configuration
+################################################################################
+################################################################################
+# VPC CONFIGURATION
+################################################################################
+################################################################################
 ################################################################################
 module "networking" {
   source               = "../common/modules/network"
@@ -22,7 +33,11 @@ module "networking" {
 }
 
 ################################################################################
-# SG Configuration
+################################################################################
+################################################################################
+# SG CONFIGURATION
+################################################################################
+################################################################################
 ################################################################################
 module "private_vpc_sg" {
   source                   = "../common/modules/security"
@@ -43,8 +58,31 @@ module "private_vpc_sg" {
   egress_protocol          = "-1"
 }
 
+module "private_database_sg" {
+  source                   = "../common/modules/security"
+  create_vpc               = var.create_vpc
+  create_sg                = true
+  sg_name                  = "private-database-security-group"
+  description              = "Controls access to the private database (not internet facing)"
+  rule_ingress_description = "allow inbound access only from resources in VPC"
+  rule_egress_description  = "allow all outbound"
+  vpc_id                   = module.networking.vpc_id
+  ingress_cidr_blocks      = [var.cidr_block]
+  ingress_from_port        = 0
+  ingress_to_port          = 0
+  ingress_protocol         = "-1"
+  egress_cidr_blocks       = ["0.0.0.0/0"]
+  egress_from_port         = 0
+  egress_to_port           = 0
+  egress_protocol          = "-1"
+}
+
 ################################################################################
-# S3 Buckets Configuration
+################################################################################
+################################################################################
+# S3 BUCKETS CONFIGURATION
+################################################################################
+################################################################################
 ################################################################################
 module "users_profile_images_bucket" {
   source = "terraform-aws-modules/s3-bucket/aws"
@@ -63,19 +101,32 @@ module "users_thumbnails_images_bucket" {
 }
 
 ################################################################################
-# SNS Queue Configuration
+################################################################################
+################################################################################
+# SNS CONFIGURATION
+################################################################################
+################################################################################
 ################################################################################
 resource "aws_sns_topic" "new_user_added_topic" {
   name = "new-user-added-topic"
 }
 
 ################################################################################
-# SQS Queue Configuration
 ################################################################################
+################################################################################
+# SQS QUEUE CONFIGURATION
+################################################################################
+################################################################################
+################################################################################
+
 # Users Profile Image Queue
 resource "aws_sqs_queue" "users_profile_images_queue" {
   name = "users-profile-images"
+  redrive_policy  = "{\"deadLetterTargetArn\":\"${aws_sqs_queue.users_profile_images_dlq.arn}\",\"maxReceiveCount\":5}"
+}
 
+resource "aws_sqs_queue_policy" "users_profile_images_queue_policy" {
+  queue_url = "${aws_sqs_queue.users_profile_images_queue.id}"
   # SQS Policy to specify which service can send messages to this queue
   policy = <<POLICY
 {
@@ -95,15 +146,20 @@ resource "aws_sqs_queue" "users_profile_images_queue" {
 POLICY
 }
 
-# New User Queue
+# users-demo-posts DLQ
+resource "aws_sqs_queue" "users_profile_images_dlq" {
+  name = "users-profile-images-dlq"
+}
+
+# User Demo Posts Queue
 resource "aws_sqs_queue" "users_demo_post_queue" {
   name = "users-demo-posts"
+  redrive_policy  = "{\"deadLetterTargetArn\":\"${aws_sqs_queue.users_demo_post_dlq.arn}\",\"maxReceiveCount\":5}"
 }
 
 resource "aws_sqs_queue_policy" "users_demo_post_queue_policy" {
   queue_url = "${aws_sqs_queue.users_demo_post_queue.id}"
-  # 1. SQS Policy that is needed for our SQS to actually receive events from the SNS topic
-  # 2. SQS Policy to specify that lambda (create_user) can send messages to this queue
+  # SQS Policy that is needed for our SQS to actually receive events from the SNS topic
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -120,28 +176,23 @@ resource "aws_sqs_queue_policy" "users_demo_post_queue_policy" {
           "aws:SourceArn": "${aws_sns_topic.new_user_added_topic.arn}"
         }
       }
-    },
-    {
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": "sqs:SendMessage",
-      "Resource": "arn:aws:sqs:*:*:users-demo-posts",
-      "Condition": {
-        "ArnEquals": {
-          "aws:SourceArn": "${module.create_user_lambda.lambda_function_invoke_arn}" 
-        }
-      }
     }
   ]
 }
 POLICY
 }
 
-# DLQ for New User Queue
+# User Demo Posts DLQ
 resource "aws_sqs_queue" "users_demo_post_dlq" {
   name = "users-demo-posts-dlq"
 }
 
+################################################################################
+################################################################################
+# SNS - SQS SUBSCRIPTION
+################################################################################
+################################################################################
+################################################################################
 # subscription, which will allow our SQS queue to receive notifications from the SNS topic we created above
 resource "aws_sns_topic_subscription" "users_demo_post_queue_target" {
   topic_arn = "${aws_sns_topic.new_user_added_topic.arn}"
@@ -150,7 +201,11 @@ resource "aws_sns_topic_subscription" "users_demo_post_queue_target" {
 }
 
 ################################################################################
-# S3 - SQS Notifications
+################################################################################
+################################################################################
+# S3 - SQS NOTIFICATIONS
+################################################################################
+################################################################################
 ################################################################################
 resource "aws_s3_bucket_notification" "users_profile_images_notification" {
   bucket = module.users_profile_images_bucket.s3_bucket_id
@@ -164,7 +219,11 @@ resource "aws_s3_bucket_notification" "users_profile_images_notification" {
 }
 
 ################################################################################
-# Database Configuration
+################################################################################
+################################################################################
+# DATABASES CONFIGURATION
+################################################################################
+################################################################################
 ################################################################################
 # Users Database
 module "users_database" {
@@ -173,7 +232,7 @@ module "users_database" {
   database_username     = var.users_database_username
   database_password     = var.users_database_password
   subnet_ids            = module.networking.private_subnet_ids
-  security_group_ids    = [module.private_vpc_sg.security_group_id]
+  security_group_ids    = [module.private_database_sg.security_group_id]
   monitoring_role_name  = "UsersDatabaseMonitoringRole"
 }
 # Posts Database
@@ -183,12 +242,16 @@ module "posts_database" {
   database_username     = var.posts_database_username
   database_password     = var.posts_database_password
   subnet_ids            = module.networking.private_subnet_ids
-  security_group_ids    = [module.private_vpc_sg.security_group_id]
+  security_group_ids    = [module.private_database_sg.security_group_id]
   monitoring_role_name  = "PostsDatabaseMonitoringRole"
 }
 
 ################################################################################
-# Lambdas Layer Configuration
+################################################################################
+################################################################################
+# LAMBDAS LAYERS CONFIGURATION
+################################################################################
+################################################################################
 ################################################################################
 module "lambda_layer_logging" {
   source = "terraform-aws-modules/lambda/aws"
@@ -236,7 +299,11 @@ module "lambda_layer_posts_database" {
 }
 
 ################################################################################
-# Lambdas Configuration
+################################################################################
+################################################################################
+# LAMBDAS CONFIGURATION
+################################################################################
+################################################################################
 ################################################################################
 ################################################################################
 # AUTH
@@ -521,8 +588,7 @@ module "create_user_lambda" {
     AWS_SNS_REGION = var.aws_region
     AWS_SNS_TOPIC_ARN = "${aws_sns_topic.new_user_added_topic.arn}"
     AWS_SQS_REGION = var.aws_region
-    # check if SQS_QUEUE_URL is exported from resource -> then no need of aws_account_id
-    AWS_SQS_QUEUE_URL = "https://sqs.${var.aws_region}.amazonaws.com/${var.aws_account_id}/users-demo-posts"
+    AWS_SQS_QUEUE_URL = aws_sqs_queue.users_demo_post_queue.url
   }
 }
 
@@ -826,7 +892,11 @@ module "list_user_posts_lambda" {
 }
 
 ################################################################################
-# API GW Configuration
+################################################################################
+################################################################################
+# API GW CONFIGURATION
+################################################################################
+################################################################################
 ################################################################################
 module "api_gateway" {
   source = "terraform-aws-modules/apigateway-v2/aws"
@@ -925,7 +995,11 @@ resource "aws_iam_role" "invocation_role" {
 }
 
 ################################################################################
-# API GW Authorizer Configuration
+################################################################################
+################################################################################
+# API GW AUTHORIZER CONFIGURATION
+################################################################################
+################################################################################
 ################################################################################
 resource "aws_iam_role_policy" "invocation_policy" {
   name = "default"
