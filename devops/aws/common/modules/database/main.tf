@@ -1,6 +1,6 @@
 module "database" {
   source  = "terraform-aws-modules/rds/aws"
-  version = "~> 3.5"
+  version = "~> 4.1.3"
 
   identifier = var.database_identifier
 
@@ -18,7 +18,7 @@ module "database" {
   # NOTE: Do NOT use 'user' as the value for 'username' as it throws:
   # "Error creating DB Instance: InvalidParameterValue: MasterUsername
   # user cannot be used as it is a reserved word used by the engine"
-  name     = var.database_name
+  db_name     = var.database_name
   username = var.database_username
   password = var.database_password
   port     = var.database_port

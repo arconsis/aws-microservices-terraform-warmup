@@ -419,7 +419,7 @@ module "login" {
     DB_PORT = module.users_database.db_instance_port,
     DB_NAME = module.users_database.db_instance_name,
     DB_USER = module.users_database.db_instance_username,
-    DB_PASS = module.users_database.db_master_password,
+    DB_PASS = module.users_database.db_instance_password,
     JWT_SECRET = var.jwt_secret
   }
 }
@@ -467,12 +467,12 @@ module "run_db_migrations" {
     USERS_DB_PORT = module.users_database.db_instance_port,
     USERS_DB_NAME = module.users_database.db_instance_name,
     USERS_DB_USER = module.users_database.db_instance_username,
-    USERS_DB_PASS = module.users_database.db_master_password,
+    USERS_DB_PASS = module.users_database.db_instance_password,
     POSTS_DB_HOST = module.posts_database.db_instance_address,
     POSTS_DB_PORT = module.posts_database.db_instance_port,
     POSTS_DB_NAME = module.posts_database.db_instance_name,
     POSTS_DB_USER = module.posts_database.db_instance_username,
-    POSTS_DB_PASS = module.posts_database.db_master_password
+    POSTS_DB_PASS = module.posts_database.db_instance_password
   }
 }
 
@@ -519,7 +519,7 @@ module "create_admin_lambda" {
     DB_PORT = module.users_database.db_instance_port,
     DB_NAME = module.users_database.db_instance_name,
     DB_USER = module.users_database.db_instance_username,
-    DB_PASS = module.users_database.db_master_password,
+    DB_PASS = module.users_database.db_instance_password,
   }
 }
 
@@ -584,7 +584,7 @@ module "create_user_lambda" {
     DB_PORT = module.users_database.db_instance_port,
     DB_NAME = module.users_database.db_instance_name,
     DB_USER = module.users_database.db_instance_username,
-    DB_PASS = module.users_database.db_master_password,
+    DB_PASS = module.users_database.db_instance_password,
     AWS_SNS_REGION = var.aws_region
     AWS_SNS_TOPIC_ARN = "${aws_sns_topic.new_user_added_topic.arn}"
     AWS_SQS_REGION = var.aws_region
@@ -630,7 +630,7 @@ module "get_user_lambda" {
     DB_PORT = module.users_database.db_instance_port,
     DB_NAME = module.users_database.db_instance_name,
     DB_USER = module.users_database.db_instance_username,
-    DB_PASS = module.users_database.db_master_password,
+    DB_PASS = module.users_database.db_instance_password,
   }
 }
 
@@ -672,7 +672,7 @@ module "list_users_lambda" {
     DB_PORT = module.users_database.db_instance_port,
     DB_NAME = module.users_database.db_instance_name,
     DB_USER = module.users_database.db_instance_username,
-    DB_PASS = module.users_database.db_master_password,
+    DB_PASS = module.users_database.db_instance_password,
   }
 }
 
@@ -719,7 +719,7 @@ module "update_user_lambda" {
     DB_PORT = module.users_database.db_instance_port,
     DB_NAME = module.users_database.db_instance_name,
     DB_USER = module.users_database.db_instance_username,
-    DB_PASS = module.users_database.db_master_password,
+    DB_PASS = module.users_database.db_instance_password,
     AWS_S3_REGION = var.aws_region
     AWS_S3_BUCKET = module.users_profile_images_bucket.s3_bucket_id
   }
@@ -776,7 +776,7 @@ module "modify_user_profile_image_lambda" {
     DB_PORT = module.users_database.db_instance_port,
     DB_NAME = module.users_database.db_instance_name,
     DB_USER = module.users_database.db_instance_username,
-    DB_PASS = module.users_database.db_master_password,
+    DB_PASS = module.users_database.db_instance_password,
     AWS_S3_REGION = var.aws_region
     AWS_S3_BUCKET = module.users_thumbnails_images_bucket.s3_bucket_id
     AWS_SQS_REGION = var.aws_region
@@ -843,7 +843,7 @@ module "create_post_lambda" {
     DB_PORT = module.posts_database.db_instance_port,
     DB_NAME = module.posts_database.db_instance_name,
     DB_USER = module.posts_database.db_instance_username,
-    DB_PASS = module.posts_database.db_master_password,
+    DB_PASS = module.posts_database.db_instance_password,
   }
 }
 
@@ -887,7 +887,7 @@ module "list_user_posts_lambda" {
     DB_PORT = module.posts_database.db_instance_port,
     DB_NAME = module.posts_database.db_instance_name,
     DB_USER = module.posts_database.db_instance_username,
-    DB_PASS = module.posts_database.db_master_password,
+    DB_PASS = module.posts_database.db_instance_password,
   }
 }
 
