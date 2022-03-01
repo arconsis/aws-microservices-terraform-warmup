@@ -2,8 +2,6 @@
 # ALB Definition
 ################################################################################
 resource "aws_alb" "this" {
-  count = var.create_alb ? 1 : 0
-
   name               = var.alb_name
   load_balancer_type = var.load_balancer_type
   internal           = var.internal
@@ -15,9 +13,9 @@ resource "aws_alb" "this" {
 # ALB HTTP Listener Definition
 ################################################################################
 resource "aws_alb_listener" "http_tcp" {
-  count = var.create_alb ? length(var.http_tcp_listeners) : 0
+  count = length(var.http_tcp_listeners)
 
-  load_balancer_arn = aws_alb.this[0].arn
+  load_balancer_arn = aws_alb.this.arn
   port              = var.http_tcp_listeners[count.index]["port"]
   protocol          = var.http_tcp_listeners[count.index]["protocol"]
 

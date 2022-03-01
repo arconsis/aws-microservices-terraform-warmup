@@ -33,21 +33,6 @@ variable "create_igw" {
   default     = true
 }
 
-variable "single_nat_gateway" {
-  description = "Define we need single NAT GW"
-  default     = false
-}
-
-variable "enable_nat_gateway" {
-  description = "Define we need enable NAT GW"
-  default     = true
-}
-
-variable "cidr_block" {
-  default     = "10.0.0.0/24"
-  description = "Network within which the Subnets will be created."
-}
-
 # network resources
 variable "enable_dns_support" {
   default     = true
@@ -59,19 +44,24 @@ variable "enable_dns_hostnames" {
   description = " (Optional) A boolean flag to enable/disable DNS hostnames in the VPC"
 }
 
-variable "private_subnet_cidrs" {
-  type        = list(any)
-  description = "List of private cidrs, for every availability zone you want you need one. Example: 10.0.0.0/24 and 10.0.1.0/24"
+variable "vpc_cidr" {
+  type        = string
+  description = "Cidr block for vpc"
+  default     = "10.0.0.0/16"
 }
 
-variable "public_subnet_cidrs" {
-  type        = list(any)
-  description = "List of public cidrs, for every availability zone you want you need one. Example: 10.0.0.0/24 and 10.0.1.0/24"
+variable "public_subnets" {
+  type = list(string)
+
+  description = "Public subnet AZs"
+  default     = ["eu-west-1a", "eu-west-1b"]
 }
 
-variable "availability_zones" {
-  type        = list(any)
-  description = "List of availability zones you want. Example: eu-west-1a and eu-west-1b"
+variable "private_subnets" {
+  type = list(string)
+
+  description = "Private subnet AZs"
+  default     = ["eu-west-1a", "eu-west-1b"]
 }
 
 variable "public_subnet_additional_tags" {

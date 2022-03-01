@@ -1,9 +1,3 @@
-variable "create_alb" {
-  description = "Controls if the Load Balancer should be created"
-  type        = bool
-  default     = true
-}
-
 variable "vpc_id" {
   description = "The VPC id"
 }

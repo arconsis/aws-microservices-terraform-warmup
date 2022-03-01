@@ -333,7 +333,7 @@ module "ecs_books_api_ec2" {
   cluster_id                              = module.ecs_cluster.cluster_id
   vpc_id                                  = module.networking.vpc_id
   cluster_name                            = module.ecs_cluster.cluster_name
-  has_discovery                           = true
+  enable_discovery                           = true
   dns_namespace_id                        = aws_service_discovery_private_dns_namespace.segment.id
   service_security_groups_ids             = [module.ecs_tasks_sg.security_group_id]
   subnet_ids                              = module.networking.private_subnet_ids
@@ -351,7 +351,7 @@ module "ecs_books_api_ec2" {
   service_desired_count                   = var.books_api_desired_count
   service_max_count                       = var.books_api_max_count
   service_task_family                     = var.books_api_task_family
-  service_enviroment_variables = [
+  service_environment_variables = [
     {
       "name" : "POSTGRES_HOST",
       "value" : "${tostring(module.books_database.db_instance_address)}",
@@ -380,7 +380,7 @@ module "ecs_books_api_ec2" {
   task_compatibilities                    = var.books_api_task_compatibilities
   launch_type                             = var.books_api_launch_type
   alb_listener                            = module.public_alb.alb_listener
-  has_alb                                 = true
+  enable_alb                                 = true
   alb_listener_tg                         = var.books_api_tg
   alb_listener_port                       = 80
   alb_listener_protocol                   = "HTTP"
@@ -404,7 +404,7 @@ module "ecs_recommendations_api_ec2" {
   vpc_id                                  = module.networking.vpc_id
   cluster_id                              = module.ecs_cluster.cluster_id
   cluster_name                            = module.ecs_cluster.cluster_name
-  has_discovery                           = true
+  enable_discovery                           = true
   dns_namespace_id                        = aws_service_discovery_private_dns_namespace.segment.id
   service_security_groups_ids             = [module.private_ecs_tasks_sg.security_group_id]
   subnet_ids                              = module.networking.private_subnet_ids
@@ -422,7 +422,7 @@ module "ecs_recommendations_api_ec2" {
   service_desired_count                   = var.recommendations_api_desired_count
   service_max_count                       = var.recommendations_api_max_count
   service_task_family                     = var.recommendations_api_task_family
-  service_enviroment_variables = [
+  service_environment_variables = [
     {
       "name" : "POSTGRES_HOST",
       "value" : "${tostring(module.recommendations_database.db_instance_address)}",
@@ -451,7 +451,7 @@ module "ecs_recommendations_api_ec2" {
   task_compatibilities                    = ["EC2"]
   launch_type                             = "EC2"
   alb_listener                            = module.public_alb.alb_listener
-  has_alb                                 = false
+  enable_alb                                 = false
   alb_listener_tg                         = null
   alb_listener_port                       = null
   alb_listener_protocol                   = null
@@ -475,7 +475,7 @@ module "ecs_users_api_ec2" {
   vpc_id                                  = module.networking.vpc_id
   cluster_id                              = module.ecs_cluster.cluster_id
   cluster_name                            = module.ecs_cluster.cluster_name
-  has_discovery                           = true
+  enable_discovery                           = true
   dns_namespace_id                        = aws_service_discovery_private_dns_namespace.segment.id
   service_security_groups_ids             = [module.ecs_tasks_sg.security_group_id]
   subnet_ids                              = module.networking.private_subnet_ids
@@ -493,7 +493,7 @@ module "ecs_users_api_ec2" {
   service_desired_count                   = var.users_api_desired_count
   service_max_count                       = var.users_api_max_count
   service_task_family                     = var.users_api_task_family
-  service_enviroment_variables = [
+  service_environment_variables = [
     {
       "name" : "RECOMMENDATIONS_SERVICE_URL",
       "value" : "http://${module.ecs_recommendations_api_ec2.aws_service_discovery_service_name}.${aws_service_discovery_private_dns_namespace.segment.name}:${var.recommendations_api_port}"
@@ -526,7 +526,7 @@ module "ecs_users_api_ec2" {
   task_compatibilities                    = ["EC2"]
   launch_type                             = "EC2"
   alb_listener                            = module.public_alb.alb_listener
-  has_alb                                 = true
+  enable_alb                                 = true
   alb_listener_tg                         = var.users_api_tg
   alb_listener_port                       = 80
   alb_listener_protocol                   = "HTTP"

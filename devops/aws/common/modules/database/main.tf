@@ -1,5 +1,5 @@
 module "database" {
-  source = "terraform-aws-modules/rds/aws"
+  source  = "terraform-aws-modules/rds/aws"
   version = "~> 3.5"
 
   identifier = var.database_identifier
@@ -52,13 +52,13 @@ module "database" {
     }
   ], var.database_parameters)
 
-  db_option_group_tags    = {
+  db_option_group_tags = {
     "Sensitive" = "low"
   }
   db_parameter_group_tags = {
     "Sensitive" = "low"
   }
-  db_subnet_group_tags    = {
+  db_subnet_group_tags = {
     "Sensitive" = "high"
   }
 }
