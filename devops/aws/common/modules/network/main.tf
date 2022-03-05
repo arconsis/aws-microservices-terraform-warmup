@@ -57,7 +57,7 @@ resource "aws_subnet" "private" {
   vpc_id            = aws_vpc.this.id
   availability_zone = element(var.private_subnets, count.index)
 
-  cidr_block = cidrsubnet(aws_vpc.this.cidr_block, 4, count.index)
+  cidr_block = cidrsubnet(aws_vpc.this.cidr_block, 4, count.index + length(var.public_subnets))
 
   tags = {
     Name        = "aws-warmup-${var.environment}-private-subnet"

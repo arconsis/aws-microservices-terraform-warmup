@@ -47,31 +47,16 @@ variable "enable_dns_hostnames" {
 variable "vpc_cidr" {
   type        = string
   description = "Cidr block for vpc"
-  default     = "10.0.0.0/16"
 }
 
 variable "public_subnets" {
   type = list(string)
 
   description = "Public subnet AZs"
-  default     = ["eu-west-1a", "eu-west-1b"]
 }
 
 variable "private_subnets" {
   type = list(string)
 
   description = "Private subnet AZs"
-  default     = ["eu-west-1a", "eu-west-1b"]
-}
-
-variable "public_subnet_additional_tags" {
-  default     = {}
-  description = "Additional resource tags"
-  type        = map(string)
-}
-
-variable "private_subnet_additional_tags" {
-  default     = {}
-  description = "Additional resource tags"
-  type        = map(string)
 }

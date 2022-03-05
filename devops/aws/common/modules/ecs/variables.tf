@@ -96,9 +96,9 @@ variable "task_definition" {
 variable "service" {
   description = "ECS service"
   type        = object({
-    name              = string
-    desired_count     = number
-    max_count         = number
+    name          = string
+    desired_count = number
+    max_count     = number
   })
 }
 

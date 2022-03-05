@@ -15,12 +15,16 @@ provider "aws" {
 }
 
 module "networking" {
-  source     = "../common/modules/network"
-  create_vpc = var.create_vpc
-  create_igw = var.create_igw
-  region     = var.aws_region
-  vpc_name   = var.vpc_name
-  vpc_cidr   = var.cidr_block
+  source               = "../common/modules/network"
+  create_vpc           = var.create_vpc
+  create_igw           = var.create_igw
+  region               = var.aws_region
+  vpc_name             = var.vpc_name
+  vpc_cidr             = var.cidr_block
+  enable_dns_hostnames = var.enable_dns_hostnames
+  enable_dns_support   = var.enable_dns_support
+  private_subnets      = var.private_subnets
+  public_subnets       = var.public_subnets
 }
 
 ################################################################################
@@ -393,9 +397,9 @@ module "ecs_books_api_fargate" {
     }
   }
   service = {
-    name              = var.books_api_name
-    desired_count     = var.books_api_desired_count
-    max_count         = var.books_api_max_count
+    name          = var.books_api_name
+    desired_count = var.books_api_desired_count
+    max_count     = var.books_api_max_count
   }
   task_definition = {
     name              = var.books_api_name
@@ -477,9 +481,9 @@ module "ecs_promotions_api_fargate" {
     }
   }
   service = {
-    name              = var.promotions_api_name
-    desired_count     = var.promotions_api_desired_count
-    max_count         = var.promotions_api_max_count
+    name          = var.promotions_api_name
+    desired_count = var.promotions_api_desired_count
+    max_count     = var.promotions_api_max_count
   }
   task_definition = {
     name              = var.promotions_api_name
@@ -528,9 +532,9 @@ module "ecs_recommendations_api_fargate" {
   alb_listener = null
   alb          = null
   service      = {
-    name              = var.recommendations_api_name
-    desired_count     = var.recommendations_api_desired_count
-    max_count         = var.recommendations_api_max_count
+    name          = var.recommendations_api_name
+    desired_count = var.recommendations_api_desired_count
+    max_count     = var.recommendations_api_max_count
   }
   task_definition = {
     name              = var.recommendations_api_name
@@ -612,9 +616,9 @@ module "ecs_users_api_fargate" {
     }
   }
   service = {
-    name              = var.users_api_name
-    desired_count     = var.users_api_desired_count
-    max_count         = var.users_api_max_count
+    name          = var.users_api_name
+    desired_count = var.users_api_desired_count
+    max_count     = var.users_api_max_count
   }
   task_definition = {
     name              = var.users_api_name
