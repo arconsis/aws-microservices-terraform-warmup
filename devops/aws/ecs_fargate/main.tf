@@ -16,8 +16,6 @@ provider "aws" {
 
 module "networking" {
   source               = "../common/modules/network"
-  create_vpc           = var.create_vpc
-  create_igw           = var.create_igw
   region               = var.aws_region
   vpc_name             = var.vpc_name
   vpc_cidr             = var.cidr_block
@@ -476,7 +474,7 @@ module "ecs_promotions_api_fargate" {
       protocol      = "HTTP"
       target_type   = "ip"
       arn           = module.public_alb.alb_listener_http_tcp_arn
-      rule_priority = 1
+      rule_priority = 2
       rule_type     = "forward"
     }
   }
@@ -611,7 +609,7 @@ module "ecs_users_api_fargate" {
       protocol      = "HTTP"
       target_type   = "ip"
       arn           = module.public_alb.alb_listener_http_tcp_arn
-      rule_priority = 1
+      rule_priority = 3
       rule_type     = "forward"
     }
   }

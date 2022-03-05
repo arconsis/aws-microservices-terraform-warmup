@@ -1,7 +1,3 @@
-locals {
-  vpc_id = concat(aws_vpc.this.*.id, [""])[0]
-}
-
 ################################################################################
 # VPC Definition
 ################################################################################
@@ -22,7 +18,7 @@ resource "aws_vpc" "this" {
 # IG Definition
 ################################################################################
 resource "aws_internet_gateway" "igw" {
-  vpc_id = local.vpc_id
+  vpc_id = aws_vpc.this.id
   tags   = {
     Name        = "${var.project}_${var.environment}_ig"
     Environment = var.environment

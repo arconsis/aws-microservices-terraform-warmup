@@ -33,24 +33,6 @@ variable "private_subnets" {
   default     = ["eu-west-1a", "eu-west-1b"]
 }
 
-variable "create_vpc" {
-  description = "Flag to define if we have to create vpc"
-  type        = bool
-  default     = true
-}
-
-variable "create_igw" {
-  description = "Flag to define if we have to create IG"
-  type        = bool
-  default     = true
-}
-
-variable "enable_nat_gateway" {
-  description = "Flag to define enable NAT GW"
-  type        = bool
-  default     = true
-}
-
 variable "cidr_block" {
   description = "Network IP range"
   default     = "10.0.0.0/16"

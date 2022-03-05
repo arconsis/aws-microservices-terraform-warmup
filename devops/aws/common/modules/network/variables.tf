@@ -17,20 +17,9 @@ variable "environment" {
   default     = "dev"
 }
 
-# vpc
-variable "create_vpc" {
-  description = "Define if we have to create new VPC"
-  default     = true
-}
-
 variable "vpc_name" {
   description = "The name of the VPC. Other names will result from this."
   default     = "ms-vpc"
-}
-
-variable "create_igw" {
-  description = "Define if we have to create IG"
-  default     = true
 }
 
 # network resources
