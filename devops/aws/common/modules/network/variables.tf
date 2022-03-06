@@ -8,11 +8,6 @@ variable "region" {
 # Project metadata
 ################################################################################
 
-variable "default_tags" {
-  description = "Default tags to set to every resource"
-  type        = map(string)
-}
-
 variable "vpc_name" {
   description = "The name of the VPC. Other names will result from this."
   default     = "ms-vpc"

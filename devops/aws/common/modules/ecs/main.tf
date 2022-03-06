@@ -4,7 +4,7 @@ resource "aws_cloudwatch_log_group" "this" {
   retention_in_days = var.logs_retention_in_days
 
   tags = {
-    Name = "${var.task_definition.name}_log_group"
+    Name = "${var.task_definition.name}_lg"
   }
 }
 

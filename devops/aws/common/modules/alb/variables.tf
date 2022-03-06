@@ -6,11 +6,6 @@ variable "alb_name" {
   description = "The name of the loadbalancer"
 }
 
-variable "default_tags" {
-  description = "Default tags to set to every resource"
-  type        = map(string)
-}
-
 variable "load_balancer_type" {
   description = "The type of load balancer to create. Possible values are application or network."
   type        = string

@@ -1,8 +1,8 @@
 resource "aws_ecs_cluster" "main" {
   name = var.project
-  tags = merge({
+  tags = {
     Name = "${var.project}-aws-warmup-ecs"
-  }, var.default_tags)
+  }
 }
 
 resource "aws_ecs_cluster_capacity_providers" "example" {

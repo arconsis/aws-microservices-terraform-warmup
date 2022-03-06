@@ -6,9 +6,9 @@ module "database" {
   source  = "terraform-aws-modules/rds/aws"
   version = "~> 4.1.3"
 
-  tags = merge({
+  tags = {
     Name = "${var.database_identifier}-aws-warmup-db"
-  }, var.default_tags)
+  }
 
   identifier = var.database_identifier
 

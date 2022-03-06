@@ -6,10 +6,10 @@ resource "aws_security_group" "this" {
   name        = var.sg_name
   description = var.description
   vpc_id      = var.vpc_id
-  tags        = merge({
+  tags        = {
     Name = "${var.sg_name}-aws-warmup-sg"
     VPC  = var.vpc_id
-  }, var.default_tags)
+  }
 }
 
 #####################################

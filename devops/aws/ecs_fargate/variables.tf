@@ -14,6 +14,7 @@ variable "aws_profile" {
 ################################################################################
 # Network Configuration
 ################################################################################
+################################################################################
 variable "vpc_name" {
   description = "The name of the VPC. Other names will result from this."
   default     = "ms-vpc"
@@ -67,7 +68,7 @@ variable "project" {
 
 variable "environment" {
   description = "Indicate the environment"
-  default     = "dec"
+  default     = "dev"
 }
 
 ################################################################################

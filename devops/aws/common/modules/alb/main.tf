@@ -7,10 +7,10 @@ resource "aws_alb" "this" {
   internal           = var.internal
   security_groups    = var.security_groups
   subnets            = var.subnet_ids
-  tags               = merge({
+  tags               = {
     Name = "${var.alb_name}-aws-warmup-alb"
     Role = var.internal ? "internal" : "external"
-  }, var.default_tags)
+  }
 }
 
 ################################################################################

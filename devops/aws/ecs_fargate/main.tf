@@ -13,6 +13,9 @@ provider "aws" {
   shared_credentials_files = ["$HOME/.aws/credentials"]
   profile                  = var.aws_profile
   region                   = var.aws_region
+  default_tags {
+    tags = local.default_tags
+  }
 }
 
 module "networking" {
@@ -24,7 +27,6 @@ module "networking" {
   enable_dns_support   = var.enable_dns_support
   private_subnets      = var.private_subnets
   public_subnets       = var.public_subnets
-  default_tags         = local.default_tags
 }
 
 ################################################################################
@@ -115,7 +117,6 @@ module "alb_sg" {
     }
   }
   ingress_source_sg_rules = {}
-  default_tags            = local.default_tags
 }
 
 module "ecs_tasks_sg" {
@@ -144,7 +145,6 @@ module "ecs_tasks_sg" {
     }
   }
   ingress_cidr_rules = {}
-  default_tags       = local.default_tags
 }
 
 module "private_ecs_tasks_sg" {
@@ -174,7 +174,6 @@ module "private_ecs_tasks_sg" {
     }
   }
   ingress_source_sg_rules = {}
-  default_tags            = local.default_tags
 }
 
 module "private_database_sg" {
@@ -204,7 +203,6 @@ module "private_database_sg" {
     }
   }
   ingress_source_sg_rules = {}
-  default_tags            = local.default_tags
 }
 
 module "public_alb" {
@@ -227,14 +225,12 @@ module "public_alb" {
       }
     }
   ]
-  default_tags = local.default_tags
 }
 
 module "ecs_cluster" {
   source                   = "../common/modules/ecs_cluster"
   project                  = var.project
   create_capacity_provider = false
-  default_tags             = local.default_tags
 }
 
 resource "aws_service_discovery_private_dns_namespace" "segment" {
@@ -249,7 +245,8 @@ resource "aws_service_discovery_private_dns_namespace" "segment" {
 # Databases Secrets
 # https://www.sufle.io/blog/keeping-secrets-as-secret-on-amazon-ecs-using-terraform
 resource "aws_secretsmanager_secret" "books_database_password_secret" {
-  name = "books_database_master_password"
+  name                    = "books_database_master_password"
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "books_database_password_secret_version" {
@@ -258,7 +255,8 @@ resource "aws_secretsmanager_secret_version" "books_database_password_secret_ver
 }
 
 resource "aws_secretsmanager_secret" "books_database_username_secret" {
-  name = "books_database_master_username"
+  name                    = "books_database_master_username"
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "books_database_username_secret_version" {
@@ -267,7 +265,8 @@ resource "aws_secretsmanager_secret_version" "books_database_username_secret_ver
 }
 
 resource "aws_secretsmanager_secret" "users_database_password_secret" {
-  name = "users_database_master_password"
+  name                    = "users_database_master_password"
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "users_database_password_secret_version" {
@@ -276,7 +275,8 @@ resource "aws_secretsmanager_secret_version" "users_database_password_secret_ver
 }
 
 resource "aws_secretsmanager_secret" "users_database_username_secret" {
-  name = "users_database_master_username"
+  name                    = "users_database_master_username"
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "users_database_username_secret_version" {
@@ -285,7 +285,8 @@ resource "aws_secretsmanager_secret_version" "users_database_username_secret_ver
 }
 
 resource "aws_secretsmanager_secret" "recommendations_database_password_secret" {
-  name = "recommendations_database_master_password"
+  name                    = "recommendations_database_master_password"
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "recommendations_database_password_secret_version" {
@@ -294,7 +295,8 @@ resource "aws_secretsmanager_secret_version" "recommendations_database_password_
 }
 
 resource "aws_secretsmanager_secret" "recommendations_database_username_secret" {
-  name = "recommendations_database_master_username"
+  name                    = "recommendations_database_master_username"
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "recommendations_database_username_secret_version" {
@@ -338,7 +340,6 @@ module "books_database" {
   subnet_ids           = module.networking.private_subnet_ids
   security_group_ids   = [module.private_database_sg.security_group_id]
   monitoring_role_name = "BooksDatabaseMonitoringRole"
-  default_tags         = local.default_tags
 }
 # Recommendations Database
 module "recommendations_database" {
@@ -349,7 +350,6 @@ module "recommendations_database" {
   subnet_ids           = module.networking.private_subnet_ids
   security_group_ids   = [module.private_database_sg.security_group_id]
   monitoring_role_name = "RecommendationsDatabaseMonitoringRole"
-  default_tags         = local.default_tags
 }
 # Users Database
 module "users_database" {
@@ -360,7 +360,6 @@ module "users_database" {
   subnet_ids           = module.networking.private_subnet_ids
   security_group_ids   = [module.private_database_sg.security_group_id]
   monitoring_role_name = "UsersDatabaseMonitoringRole"
-  default_tags         = local.default_tags
 }
 
 ################################################################################
