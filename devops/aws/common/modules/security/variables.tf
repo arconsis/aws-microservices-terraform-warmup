@@ -10,9 +10,8 @@ variable "sg_name" {
   description = "The region to use for this module."
 }
 
-variable "sg_tags" {
-  default     = {}
-  description = "Additional resource tags"
+variable "default_tags" {
+  description = "Default tags to set to every resource"
   type        = map(string)
 }
 

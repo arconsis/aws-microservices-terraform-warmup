@@ -6,6 +6,11 @@ variable "alb_name" {
   description = "The name of the loadbalancer"
 }
 
+variable "default_tags" {
+  description = "Default tags to set to every resource"
+  type        = map(string)
+}
+
 variable "load_balancer_type" {
   description = "The type of load balancer to create. Possible values are application or network."
   type        = string
@@ -27,11 +32,6 @@ variable "security_groups" {
   description = "The security groups to attach to the load balancer. e.g. [\"sg-edcd9784\",\"sg-edcd9785\"]"
   type        = list(string)
   default     = []
-}
-
-variable "environment" {
-  description = "Indicate the environment"
-  default     = "dev"
 }
 
 variable "http_tcp_listeners" {

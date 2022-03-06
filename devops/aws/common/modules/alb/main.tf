@@ -7,6 +7,10 @@ resource "aws_alb" "this" {
   internal           = var.internal
   security_groups    = var.security_groups
   subnets            = var.subnet_ids
+  tags               = merge({
+    Name = "${var.alb_name}-aws-warmup-alb"
+    Role = var.internal ? "internal" : "external"
+  }, var.default_tags)
 }
 
 ################################################################################
@@ -27,7 +31,9 @@ resource "aws_alb_listener" "http_tcp" {
       type = lookup(default_action.value, "action_type", "fixed-response")
 
       dynamic "fixed_response" {
-        for_each = length(keys(lookup(default_action.value, "fixed_response", {}))) == 0 ? [] : [lookup(default_action.value, "fixed_response", {})]
+        for_each = length(keys(lookup(default_action.value, "fixed_response", {}))) == 0 ? [] : [
+          lookup(default_action.value, "fixed_response", {})
+        ]
 
         content {
           content_type = fixed_response.value["content_type"]

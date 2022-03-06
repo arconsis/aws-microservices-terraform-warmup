@@ -6,12 +6,9 @@ resource "aws_vpc" "this" {
   enable_dns_support   = var.enable_dns_support
   enable_dns_hostnames = var.enable_dns_hostnames
 
-  tags = {
-    Name        = "aws-warmup-${var.environment}-vpc"
-    Project     = "aws-warmup"
-    Environment = var.environment
-    ManagedBy   = "terraform"
-  }
+  tags = merge({
+    Name = "aws-warmup-vpc"
+  }, var.default_tags)
 }
 
 ################################################################################
@@ -19,10 +16,9 @@ resource "aws_vpc" "this" {
 ################################################################################
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.this.id
-  tags   = {
-    Name        = "${var.project}_${var.environment}_ig"
-    Environment = var.environment
-  }
+  tags   = merge({
+    Name = "aws-warmup-ig"
+  }, var.default_tags)
 }
 
 ################################################################################
@@ -37,14 +33,12 @@ resource "aws_subnet" "public" {
 
   cidr_block = cidrsubnet(aws_vpc.this.cidr_block, 4, count.index)
 
-  tags = {
-    Name        = "aws-warmup-${var.environment}-public-subnet"
-    Project     = "aws-warmup"
-    Role        = "public"
-    Environment = var.environment
-    ManagedBy   = "terraform"
-    Subnet      = element(var.public_subnets, count.index)
-  }
+  tags = merge({
+    Name   = "aws-warmup-public-subnet"
+    Role   = "public"
+    VPC    = aws_vpc.this.id
+    Subnet = element(var.public_subnets, count.index)
+  }, var.default_tags)
 }
 
 resource "aws_subnet" "private" {
@@ -55,14 +49,12 @@ resource "aws_subnet" "private" {
 
   cidr_block = cidrsubnet(aws_vpc.this.cidr_block, 4, count.index + length(var.public_subnets))
 
-  tags = {
-    Name        = "aws-warmup-${var.environment}-private-subnet"
-    Project     = "aws-warmup"
-    Role        = "private"
-    Environment = var.environment
-    ManagedBy   = "terraform"
-    Subnet      = element(var.private_subnets, count.index)
-  }
+  tags = merge({
+    Name   = "aws-warmup-public-subnet"
+    Role   = "private"
+    VPC    = aws_vpc.this.id
+    Subnet = element(var.private_subnets, count.index)
+  }, var.default_tags)
 }
 
 ################################################################################
@@ -75,14 +67,13 @@ resource "aws_eip" "nat" {
 
   vpc = true
 
-  tags = {
-    Name        = "aws-warmup-${var.environment}-eip"
-    Project     = "aws-warmup"
-    Environment = var.environment
-    VPC         = aws_vpc.this.id
-    ManagedBy   = "terraform"
-    Role        = "private"
-  }
+  tags = merge({
+    Name   = "aws-warmup-eip"
+    Role   = "private"
+    VPC    = aws_vpc.this.id
+    Subnet = element(var.private_subnets, count.index)
+  }, var.default_tags)
+
 }
 
 resource "aws_nat_gateway" "ngw" {
@@ -90,17 +81,13 @@ resource "aws_nat_gateway" "ngw" {
 
   allocation_id = element(aws_eip.nat.*.id, count.index)
   subnet_id     = element(aws_subnet.public.*.id, count.index)
-  #  depends_on    = [aws_internet_gateway.main]
 
-  tags = {
-    Name        = "aws-warmup-${var.environment}-ngw"
-    Project     = "aws-warmup"
-    Environment = var.environment
-    VPC         = aws_vpc.this.id
-    ManagedBy   = "terraform"
-    Role        = "private"
-    Subnet      = element(aws_subnet.public.*.id, count.index)
-  }
+  tags = merge({
+    Name   = "aws-warmup-ngw"
+    Role   = "private"
+    VPC    = aws_vpc.this.id
+    Subnet = element(aws_subnet.public.*.id, count.index)
+  }, var.default_tags)
 }
 
 ################################################################################
@@ -110,14 +97,11 @@ resource "aws_nat_gateway" "ngw" {
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.this.id
 
-  tags = {
-    Name        = "aws-warmup-${var.environment}-public-rt"
-    Environment = var.environment
-    Project     = "aws-warmup"
-    Role        = "public"
-    VPC         = aws_vpc.this.id
-    ManagedBy   = "terraform"
-  }
+  tags = merge({
+    Name   = "aws-warmup-public-rt"
+    Role   = "public"
+    VPC    = aws_vpc.this.id
+  }, var.default_tags)
 }
 
 resource "aws_route" "public" {
@@ -132,22 +116,19 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
+# Create a new route table for the private subnets, make it route non-local traffic through the NAT gateway to the internet
 resource "aws_route_table" "private" {
   count  = length(var.private_subnets)
   vpc_id = aws_vpc.this.id
 
-  tags = {
-    Name        = "aws-warmup-${var.environment}-private-rt"
-    Environment = var.environment
-    Project     = "aws-warmup"
-    Role        = "public"
-    VPC         = aws_vpc.this.id
-    Subnet      = element(aws_subnet.private.*.id, count.index)
-    ManagedBy   = "terraform"
-  }
+  tags = merge({
+    Name   = "aws-warmup-private-rt"
+    Role   = "private"
+    VPC    = aws_vpc.this.id
+    Subnet = element(aws_subnet.private.*.id, count.index)
+  }, var.default_tags)
 }
 
-# Create a new route table for the private subnets, make it route non-local traffic through the NAT gateway to the internet
 resource "aws_route" "private" {
   count                  = length(var.private_subnets)
   route_table_id         = element(aws_route_table.private.*.id, count.index)

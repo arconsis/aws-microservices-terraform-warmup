@@ -1,11 +1,14 @@
 resource "aws_db_subnet_group" "db_subnet_group" {
   subnet_ids = var.subnet_ids
-  tags       = {}
 }
 
 module "database" {
   source  = "terraform-aws-modules/rds/aws"
   version = "~> 4.1.3"
+
+  tags = merge({
+    Name = "${database_identifier}-aws-warmup-db"
+  }, var.default_tags)
 
   identifier = var.database_identifier
 

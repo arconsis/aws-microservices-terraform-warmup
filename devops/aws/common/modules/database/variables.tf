@@ -101,3 +101,8 @@ variable "database_parameters" {
   type        = list(map(string))
   default     = []
 }
+
+variable "default_tags" {
+  description = "Default tags to set to every resource"
+  type        = map(string)
+}

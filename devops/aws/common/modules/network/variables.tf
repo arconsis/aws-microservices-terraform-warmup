@@ -7,14 +7,10 @@ variable "region" {
 ################################################################################
 # Project metadata
 ################################################################################
-variable "project" {
-  description = "Project name"
-  default     = "ecs_fargate_ms"
-}
 
-variable "environment" {
-  description = "Indicate the environment"
-  default     = "dev"
+variable "default_tags" {
+  description = "Default tags to set to every resource"
+  type        = map(string)
 }
 
 variable "vpc_name" {
