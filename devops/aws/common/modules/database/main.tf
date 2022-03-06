@@ -7,7 +7,7 @@ module "database" {
   version = "~> 4.1.3"
 
   tags = merge({
-    Name = "${database_identifier}-aws-warmup-db"
+    Name = "${var.database_identifier}-aws-warmup-db"
   }, var.default_tags)
 
   identifier = var.database_identifier
