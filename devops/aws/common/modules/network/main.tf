@@ -98,6 +98,8 @@ resource "aws_nat_gateway" "ngw" {
     VPC    = aws_vpc.this.id
     Subnet = element(aws_subnet.public.*.id, count.index)
   }
+
+  depends_on = [aws_internet_gateway.igw]
 }
 
 ################################################################################
