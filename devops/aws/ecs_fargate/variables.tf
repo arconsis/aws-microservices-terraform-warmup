@@ -369,7 +369,15 @@ variable "discovery_routing_policy" {
 ################################################################################
 # Database Configuration
 ################################################################################
+
 # Books DB
+variable "books_database_name" {
+  description = "The name for the books DB"
+  type        = string
+  default     = "postgres"
+}
+
+
 variable "books_database_username" {
   description = "The username for the books DB master"
   type        = string
@@ -383,6 +391,13 @@ variable "books_database_password" {
 }
 
 # Recommendations DB
+
+variable "recommendations_database_name" {
+  description = "The name for the recommendations DB"
+  type        = string
+  default     = "postgres"
+}
+
 variable "recommendations_database_username" {
   description = "The username for the recommendations DB master"
   type        = string
@@ -408,11 +423,17 @@ variable "users_database_password" {
   sensitive   = true
 }
 
+variable "users_database_name" {
+  description = "The name for the users DB"
+  type        = string
+  default     = "postgres"
+}
+
 variable "default_tags" {
   description = "Default tags to set to every resource"
   type        = map(string)
   default     = {
-    Project     = "ecs-fargate-aws-warmup"
-    ManagedBy   = "terraform"
+    Project   = "ecs-fargate-aws-warmup"
+    ManagedBy = "terraform"
   }
 }

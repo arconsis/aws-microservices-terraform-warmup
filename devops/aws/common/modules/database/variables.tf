@@ -5,8 +5,6 @@ variable "database_identifier" {
 variable "database_name" {
   description = "Database name"
   type        = string
-  sensitive   = true
-  default     = "postgres"
 }
 
 variable "database_username" {
@@ -25,6 +23,12 @@ variable "database_port" {
   description = "DB port"
   type        = number
   default = 5432
+}
+
+variable "multi_az" {
+  description = "Defines if DB should be multi az"
+  type        = bool
+  default = false
 }
 
 variable "subnet_ids" {

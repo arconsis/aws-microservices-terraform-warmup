@@ -335,6 +335,7 @@ resource "aws_iam_role_policy" "password_policy_secretsmanager" {
 module "books_database" {
   source               = "../common/modules/database"
   database_identifier  = "books-database"
+  database_name        = var.books_database_name
   database_username    = var.books_database_username
   database_password    = var.books_database_password
   subnet_ids           = module.networking.private_subnet_ids
@@ -345,6 +346,7 @@ module "books_database" {
 module "recommendations_database" {
   source               = "../common/modules/database"
   database_identifier  = "recommendations-database"
+  database_name        = var.recommendations_database_name
   database_username    = var.recommendations_database_username
   database_password    = var.recommendations_database_password
   subnet_ids           = module.networking.private_subnet_ids
@@ -355,6 +357,7 @@ module "recommendations_database" {
 module "users_database" {
   source               = "../common/modules/database"
   database_identifier  = "users-database"
+  database_name        = var.users_database_name
   database_username    = var.users_database_username
   database_password    = var.users_database_password
   subnet_ids           = module.networking.private_subnet_ids
@@ -426,7 +429,7 @@ module "ecs_books_api_fargate" {
       },
       {
         "name" : "POSTGRES_DB",
-        "value" : tostring(module.books_database.db_instance_name),
+        "value" : var.books_database_name,
       },
       {
         "name" : "POSTGRES_PORT",
@@ -561,7 +564,7 @@ module "ecs_recommendations_api_fargate" {
       },
       {
         "name" : "POSTGRES_DB",
-        "value" : tostring(module.recommendations_database.db_instance_name),
+        "value" : var.recommendations_database_name,
       },
       {
         "name" : "POSTGRES_PORT",
@@ -645,7 +648,7 @@ module "ecs_users_api_fargate" {
       },
       {
         "name" : "POSTGRES_DB",
-        "value" : tostring(module.users_database.db_instance_name),
+        "value" : var.users_database_name,
       },
       {
         "name" : "POSTGRES_PORT",

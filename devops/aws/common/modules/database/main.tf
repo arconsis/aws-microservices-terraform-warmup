@@ -31,7 +31,7 @@ module "database" {
   password = var.database_password
   port     = var.database_port
 
-  multi_az               = true
+  multi_az               = var.multi_az
   subnet_ids             = var.subnet_ids
   db_subnet_group_name   = aws_db_subnet_group.db_subnet_group.name
   vpc_security_group_ids = var.security_group_ids
