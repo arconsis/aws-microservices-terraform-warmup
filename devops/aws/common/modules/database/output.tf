@@ -8,7 +8,6 @@ output "db_arn" {
   value       = module.database.db_instance_arn
 }
 
-
 output "db_endpoint" {
   description = "The connection endpoint"
   value       = module.database.db_instance_endpoint

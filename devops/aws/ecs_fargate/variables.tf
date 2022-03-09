@@ -20,18 +20,16 @@ variable "vpc_name" {
   default     = "ms-vpc"
 }
 
-variable "public_subnets" {
-  type = list(string)
-
-  description = "Public subnet AZs"
-  default     = ["eu-west-1a", "eu-west-1b"]
+variable "public_subnet_count" {
+  type        = number
+  description = "Public subnet count"
+  default     = 2
 }
 
-variable "private_subnets" {
-  type = list(string)
-
-  description = "Private subnet AZs"
-  default     = ["eu-west-1a", "eu-west-1b"]
+variable "private_subnet_count" {
+  type        = number
+  description = "Private subnet count"
+  default     = 2
 }
 
 variable "cidr_block" {
@@ -123,7 +121,7 @@ variable "books_api_name" {
 
 variable "books_api_image" {
   description = "Defines service image"
-  default     = "eldimious/books:latest"
+  default     = "143441946271.dkr.ecr.eu-west-1.amazonaws.com/books:latest"
 }
 
 variable "books_api_aws_logs_group" {

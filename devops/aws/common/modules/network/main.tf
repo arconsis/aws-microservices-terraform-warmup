@@ -2,13 +2,22 @@
 # VPC Definition
 ################################################################################
 resource "aws_vpc" "this" {
-  cidr_block           = var.vpc_cidr
-  enable_dns_support   = var.enable_dns_support
-  enable_dns_hostnames = var.enable_dns_hostnames
+  cidr_block                       = var.vpc_cidr
+  assign_generated_ipv6_cidr_block = true
+  enable_dns_support               = var.enable_dns_support
+  enable_dns_hostnames             = var.enable_dns_hostnames
 
   tags = {
     Name = "aws-warmup-vpc"
   }
+}
+
+################################################################################
+# Availability zones
+################################################################################
+
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
 ################################################################################
@@ -26,34 +35,35 @@ resource "aws_internet_gateway" "igw" {
 ################################################################################
 
 resource "aws_subnet" "public" {
-  count = length(var.public_subnets)
+  count = var.public_subnet_count
 
   vpc_id            = aws_vpc.this.id
-  availability_zone = element(var.public_subnets, count.index)
+  availability_zone = data.aws_availability_zones.available.names[count.index]
 
-  cidr_block = cidrsubnet(aws_vpc.this.cidr_block, 4, count.index)
+  cidr_block      = cidrsubnet(aws_vpc.this.cidr_block, 4, count.index)
+  ipv6_cidr_block = cidrsubnet(aws_vpc.this.ipv6_cidr_block, 8, count.index)
 
   tags = {
     Name   = "aws-warmup-public-subnet"
     Role   = "public"
     VPC    = aws_vpc.this.id
-    Subnet = element(var.public_subnets, count.index)
+    Subnet = data.aws_availability_zones.available.names[count.index]
   }
 }
 
 resource "aws_subnet" "private" {
-  count = length(var.private_subnets)
+  count = var.private_subnet_count
 
   vpc_id            = aws_vpc.this.id
-  availability_zone = element(var.private_subnets, count.index)
+  availability_zone = data.aws_availability_zones.available.names[count.index]
 
-  cidr_block = cidrsubnet(aws_vpc.this.cidr_block, 4, count.index + length(var.public_subnets))
+  cidr_block = cidrsubnet(aws_vpc.this.cidr_block, 4, count.index + var.public_subnet_count)
 
   tags = {
     Name   = "aws-warmup-public-subnet"
     Role   = "private"
     VPC    = aws_vpc.this.id
-    Subnet = element(var.private_subnets, count.index)
+    Subnet = data.aws_availability_zones.available.names[count.index]
   }
 }
 
@@ -63,7 +73,7 @@ resource "aws_subnet" "private" {
 
 # Create a NAT gateway with an Elastic IP for each private subnet to get internet connectivity
 resource "aws_eip" "nat" {
-  count = length(var.private_subnets)
+  count = var.private_subnet_count
 
   vpc = true
 
@@ -71,13 +81,13 @@ resource "aws_eip" "nat" {
     Name   = "aws-warmup-eip"
     Role   = "private"
     VPC    = aws_vpc.this.id
-    Subnet = element(var.private_subnets, count.index)
+    Subnet = element(aws_subnet.public.*.id, count.index)
   }
 
 }
 
 resource "aws_nat_gateway" "ngw" {
-  count = length(var.private_subnets)
+  count = var.private_subnet_count
 
   allocation_id = element(aws_eip.nat.*.id, count.index)
   subnet_id     = element(aws_subnet.public.*.id, count.index)
@@ -111,14 +121,14 @@ resource "aws_route" "public" {
 }
 
 resource "aws_route_table_association" "public" {
-  count          = length(var.public_subnets)
+  count          = var.public_subnet_count
   subnet_id      = element(aws_subnet.public.*.id, count.index)
   route_table_id = aws_route_table.public.id
 }
 
 # Create a new route table for the private subnets, make it route non-local traffic through the NAT gateway to the internet
 resource "aws_route_table" "private" {
-  count  = length(var.private_subnets)
+  count  = var.private_subnet_count
   vpc_id = aws_vpc.this.id
 
   tags = {
@@ -130,7 +140,7 @@ resource "aws_route_table" "private" {
 }
 
 resource "aws_route" "private" {
-  count                  = length(var.private_subnets)
+  count                  = var.private_subnet_count
   route_table_id         = element(aws_route_table.private.*.id, count.index)
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = element(aws_nat_gateway.ngw.*.id, count.index)
@@ -138,7 +148,7 @@ resource "aws_route" "private" {
 
 # Explicitly associate the newly created route tables to the private subnets (so they don't default to the main route table)
 resource "aws_route_table_association" "private" {
-  count          = length(var.private_subnets)
+  count          = var.private_subnet_count
   subnet_id      = element(aws_subnet.private.*.id, count.index)
   route_table_id = element(aws_route_table.private.*.id, count.index)
 }

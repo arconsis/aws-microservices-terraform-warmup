@@ -25,8 +25,8 @@ module "networking" {
   vpc_cidr             = var.cidr_block
   enable_dns_hostnames = var.enable_dns_hostnames
   enable_dns_support   = var.enable_dns_support
-  private_subnets      = var.private_subnets
-  public_subnets       = var.public_subnets
+  private_subnet_count = var.private_subnet_count
+  public_subnet_count  = var.public_subnet_count
 }
 
 ################################################################################

@@ -29,14 +29,12 @@ variable "vpc_cidr" {
   description = "Cidr block for vpc"
 }
 
-variable "public_subnets" {
-  type = list(string)
-
-  description = "Public subnet AZs"
+variable "public_subnet_count" {
+  type        = number
+  description = "Public subnet count"
 }
 
-variable "private_subnets" {
-  type = list(string)
-
-  description = "Private subnet AZs"
+variable "private_subnet_count" {
+  type        = number
+  description = "Private subnet count"
 }
