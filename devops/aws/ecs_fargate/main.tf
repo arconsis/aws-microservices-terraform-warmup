@@ -429,7 +429,7 @@ module "ecs_books_api_fargate" {
       },
       {
         "name" : "POSTGRES_DB",
-        "value" : var.books_database_name,
+        "value" : tostring(module.books_database.db_instance_name),
       },
       {
         "name" : "POSTGRES_PORT",
@@ -564,7 +564,7 @@ module "ecs_recommendations_api_fargate" {
       },
       {
         "name" : "POSTGRES_DB",
-        "value" : var.recommendations_database_name,
+        "value" : tostring(module.recommendations_database.db_instance_name),
       },
       {
         "name" : "POSTGRES_PORT",
@@ -648,7 +648,7 @@ module "ecs_users_api_fargate" {
       },
       {
         "name" : "POSTGRES_DB",
-        "value" : var.users_database_name,
+        "value" : tostring(module.users_database.db_instance_name),
       },
       {
         "name" : "POSTGRES_PORT",
