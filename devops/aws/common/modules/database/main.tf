@@ -15,7 +15,7 @@ module "database" {
   engine                     = var.database_engine
   engine_version             = var.database_engine_version
   auto_minor_version_upgrade = var.database_auto_minor_version_upgrade
-  family                     = var.database_family # DB parameter group
+  family                     = var.database_family                      # DB parameter group
   major_engine_version       = var.database_engine_major_engine_version # DB option group
   instance_class             = var.database_instance_class
 
@@ -30,6 +30,8 @@ module "database" {
   username = var.database_username
   password = var.database_password
   port     = var.database_port
+
+  create_random_password = false
 
   multi_az               = var.multi_az
   subnet_ids             = var.subnet_ids

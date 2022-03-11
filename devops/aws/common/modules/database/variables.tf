@@ -22,13 +22,13 @@ variable "database_password" {
 variable "database_port" {
   description = "DB port"
   type        = number
-  default = 5432
+  default     = 5432
 }
 
 variable "multi_az" {
   description = "Defines if DB should be multi az"
   type        = bool
-  default = false
+  default     = false
 }
 
 variable "subnet_ids" {
