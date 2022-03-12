@@ -221,56 +221,62 @@ module "public_alb" {
 # https://www.sufle.io/blog/keeping-secrets-as-secret-on-amazon-ecs-using-terraform
 resource "aws_secretsmanager_secret" "books_database_password_secret" {
   name = "books_database_master_password"
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "books_database_password_secret_version" {
-  secret_id     = aws_secretsmanager_secret.books_database_password_secret.id
-  secret_string = var.books_database_password
+  secret_id               = aws_secretsmanager_secret.books_database_password_secret.id
+  secret_string           = var.books_database_password
 }
 
 resource "aws_secretsmanager_secret" "books_database_username_secret" {
   name = "books_database_master_username"
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "books_database_username_secret_version" {
-  secret_id     = aws_secretsmanager_secret.books_database_username_secret.id
-  secret_string = var.books_database_username
+  secret_id               = aws_secretsmanager_secret.books_database_username_secret.id
+  secret_string           = var.books_database_username
 }
 
 resource "aws_secretsmanager_secret" "users_database_password_secret" {
   name = "users_database_master_password"
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "users_database_password_secret_version" {
-  secret_id     = aws_secretsmanager_secret.users_database_password_secret.id
-  secret_string = var.users_database_password
+  secret_id               = aws_secretsmanager_secret.users_database_password_secret.id
+  secret_string           = var.users_database_password
 }
 
 resource "aws_secretsmanager_secret" "users_database_username_secret" {
   name = "users_database_master_username"
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "users_database_username_secret_version" {
-  secret_id     = aws_secretsmanager_secret.users_database_username_secret.id
-  secret_string = var.users_database_username
+  secret_id               = aws_secretsmanager_secret.users_database_username_secret.id
+  secret_string           = var.users_database_username
 }
 
 resource "aws_secretsmanager_secret" "recommendations_database_password_secret" {
   name = "recommendations_database_master_password"
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "recommendations_database_password_secret_version" {
-  secret_id     = aws_secretsmanager_secret.recommendations_database_password_secret.id
-  secret_string = var.recommendations_database_password
+  secret_id               = aws_secretsmanager_secret.recommendations_database_password_secret.id
+  secret_string           = var.recommendations_database_password
 }
 
 resource "aws_secretsmanager_secret" "recommendations_database_username_secret" {
   name = "recommendations_database_master_username"
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "recommendations_database_username_secret_version" {
-  secret_id     = aws_secretsmanager_secret.recommendations_database_username_secret.id
-  secret_string = var.recommendations_database_username
+  secret_id               = aws_secretsmanager_secret.recommendations_database_username_secret.id
+  secret_string           = var.recommendations_database_username
 }
 
 resource "aws_iam_role_policy" "password_policy_secretsmanager" {
@@ -359,7 +365,7 @@ module "ec2_autoscaling_group" {
   security_groups_ids        = [module.ecs_tasks_sg.security_group_id]
   subnet_ids                 = module.networking.private_subnet_ids
   assign_public_ip           = false
-  project                    = var.project
+  ecs_cluster_name           = module.ecs_cluster.cluster_name
   aws_autoscaling_group_name = "ec2-ecs-asg"
 }
 

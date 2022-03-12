@@ -26,11 +26,11 @@ resource "aws_launch_template" "this" {
     name = var.iam_ecs_service_role_name
   }
   vpc_security_group_ids = var.security_groups_ids
-  user_data              = filebase64(
+  user_data              = base64encode(
     <<EOF
 #! /bin/bash
 sudo apt-get update
-sudo echo "ECS_CLUSTER=${var.project}" >> /etc/ecs/ecs.config
+sudo echo "ECS_CLUSTER=${var.ecs_cluster_name}" >> /etc/ecs/ecs.config
 EOF
   )
   lifecycle {
@@ -41,7 +41,7 @@ EOF
 resource "aws_autoscaling_group" "this" {
   name = var.aws_autoscaling_group_name
   launch_template {
-    id      = aws_launch_template.this
+    id      = aws_launch_template.this.id
     version = "$Latest"
   }
   desired_capacity          = 4
