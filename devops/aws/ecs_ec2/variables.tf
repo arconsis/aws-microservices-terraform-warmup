@@ -5,7 +5,11 @@ variable "aws_region" {
   description = "The AWS region things are created in"
   default     = "eu-west-1"
 }
-//variable "docker_repo" {}
+
+variable "aws_profile" {
+  description = "The AWS profile name"
+  default     = "arconsis"
+}
 
 ################################################################################
 # Network Configuration
@@ -15,48 +19,21 @@ variable "vpc_name" {
   default     = "ms-vpc"
 }
 
-variable "create_vpc" {
-  description = "Flag to define if we have to create vpc"
-  type        = bool
-  default     = true
+variable "public_subnet_count" {
+  type        = number
+  description = "Public subnet count"
+  default     = 2
 }
 
-variable "create_igw" {
-  description = "Flag to define if we have to create IG"
-  type        = bool
-  default     = true
-}
-
-variable "single_nat_gateway" {
-  description = "Flag to define if we need only one NAT GW"
-  type        = bool
-  default     = false
-}
-
-variable "enable_nat_gateway" {
-  description = "Flag to define enable NAT GW"
-  type        = bool
-  default     = true
+variable "private_subnet_count" {
+  type        = number
+  description = "Private subnet count"
+  default     = 2
 }
 
 variable "cidr_block" {
   description = "Network IP range"
-  default     = "192.168.0.0/16"
-}
-
-variable "availability_zones" {
-  description = "List of availability zones you want. Example: eu-west-1a and eu-west-1b"
-  default     = ["eu-west-1a", "eu-west-1b"]
-}
-
-variable "public_subnet_cidrs" {
-  description = "List of public cidrs, for every availability zone you want you need one. Example: 10.0.0.0/24 and 10.0.1.0/24"
-  default     = ["192.168.0.0/19", "192.168.32.0/19"]
-}
-
-variable "private_subnet_cidrs" {
-  description = "List of private cidrs, for every availability zone you want you need one. Example: 10.0.0.0/24 and 10.0.1.0/24"
-  default     = ["192.168.128.0/19", "192.168.160.0/19"]
+  default     = "10.0.0.0/16"
 }
 
 variable "enable_dns_support" {
@@ -70,25 +47,16 @@ variable "enable_dns_hostnames" {
 }
 
 ################################################################################
-# ALB
-################################################################################
-variable "create_alb" {
-  description = "Flag to define if we have to create ALB"
-  type        = bool
-  default     = true
-}
-
-################################################################################
 # Project metadata
 ################################################################################
 variable "project" {
   description = "Project name"
-  default     = "ecs_fargate_ms"
+  default     = "ecs_ec2_ms"
 }
 
 variable "environment" {
   description = "Indicate the environment"
-  default     = "dec"
+  default     = "dev"
 }
 
 ################################################################################
@@ -104,12 +72,12 @@ variable "az_count" {
   default     = "2"
 }
 
-variable "fargate_cpu" {
+variable "ec2_cpu" {
   description = "Fargate instance CPU units to provision (1 vCPU = 1024 CPU units)"
   default     = "128"
 }
 
-variable "fargate_memory" {
+variable "ec2_memory" {
   description = "Fargate instance memory to provision (in MiB)"
   default     = "256"
 }
@@ -305,6 +273,13 @@ variable "discovery_routing_policy" {
 # Database Configuration
 ################################################################################
 # Books DB
+
+variable "books_database_name" {
+  description = "The name for the books DB"
+  type        = string
+  default     = "postgres"
+}
+
 variable "books_database_username" {
   description = "The username for the books DB master"
   type        = string
@@ -318,6 +293,13 @@ variable "books_database_password" {
 }
 
 # Recommendations DB
+
+variable "recommendations_database_name" {
+  description = "The name for the recommendations DB"
+  type        = string
+  default     = "postgres"
+}
+
 variable "recommendations_database_username" {
   description = "The username for the recommendations DB master"
   type        = string
@@ -331,6 +313,11 @@ variable "recommendations_database_password" {
 }
 
 # Users DB
+variable "users_database_name" {
+  description = "The name for the users DB"
+  type        = string
+  default     = "postgres"
+}
 variable "users_database_username" {
   description = "The username for the users DB master"
   type        = string
@@ -341,4 +328,13 @@ variable "users_database_password" {
   description = "The password for the users DB master"
   type        = string
   sensitive   = true
+}
+
+variable "default_tags" {
+  description = "Default tags to set to every resource"
+  type        = map(string)
+  default     = {
+    Project   = "ecs-ec2-aws-warmup"
+    ManagedBy = "terraform"
+  }
 }

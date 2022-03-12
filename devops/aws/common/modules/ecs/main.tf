@@ -144,7 +144,7 @@ resource "aws_appautoscaling_target" "this" {
 }
 
 resource "aws_appautoscaling_policy" "ecs_policy_cpu" {
-  count = var.autoscaling_settings != null && var.autoscaling_settings.target_cpu_value != null ? 1 : 0
+  count = try(var.autoscaling_settings.target_cpu_value, null) != null ? 1 : 0
 
   name               = "${var.autoscaling_settings.autoscaling_name}-scale-cpu"
   policy_type        = "TargetTrackingScaling"
@@ -164,7 +164,7 @@ resource "aws_appautoscaling_policy" "ecs_policy_cpu" {
 }
 
 resource "aws_appautoscaling_policy" "ecs_policy_memory" {
-  count = var.autoscaling_settings != null && var.autoscaling_settings.target_memory_value != null ? 1 : 0
+  count = try(var.autoscaling_settings.target_memory_value, null) != null ? 1 : 0
 
   name               = "${var.autoscaling_settings.autoscaling_name}-scale-memory"
   policy_type        = "TargetTrackingScaling"

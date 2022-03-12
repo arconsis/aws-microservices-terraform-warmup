@@ -38,7 +38,7 @@ EOF
 resource "aws_autoscaling_group" "this" {
   name                      = var.aws_autoscaling_group_name
   launch_configuration      = aws_launch_configuration.this.name
-  desired_capacity          = 3
+  desired_capacity          = 4
   min_size                  = 3
   max_size                  = 5
   force_delete              = true

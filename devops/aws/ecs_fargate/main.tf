@@ -169,8 +169,8 @@ module "private_ecs_tasks_sg" {
       protocol         = "tcp"
       from_port        = 0
       to_port          = 0
-      cidr_blocks      = [var.cidr_block]
-      ipv6_cidr_blocks = []
+      cidr_blocks      = [module.networking.vpc_cidr_block]
+      ipv6_cidr_blocks = [module.networking.vpc_ipv6_cidr_block]
     }
   }
   ingress_source_sg_rules = {}
@@ -200,6 +200,14 @@ module "private_database_sg" {
       #     We should create separate SGs for every db as they could have different ports. In this case all have PGs 5432
       to_port                  = module.books_database.db_instance_port
       source_security_group_id = module.ecs_tasks_sg.security_group_id
+    }
+    2 = {
+      description              = "allow inbound access only from private task SG"
+      protocol                 = "tcp"
+      from_port                = 0
+      #     We should create separate SGs for every db as they could have different ports. In this case all have PGs 5432
+      to_port                  = module.books_database.db_instance_port
+      source_security_group_id = module.private_ecs_tasks_sg.security_group_id
     }
   }
   ingress_cidr_rules = {}
