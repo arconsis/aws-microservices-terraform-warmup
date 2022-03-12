@@ -352,9 +352,9 @@ data "aws_iam_policy_document" "ecs_task_execution_role" {
   }
 }
 
-module "ec2_launch_configuration" {
+module "ec2_autoscaling_group" {
   source                     = "../common/modules/ec2"
-  launch_configuration_name  = "ec2_ecs_launch_configuration"
+  lauch_template_name        = "ec2_ecs_launch_template"
   iam_ecs_service_role_name  = aws_iam_instance_profile.ecs_service_role.name
   security_groups_ids        = [module.ecs_tasks_sg.security_group_id]
   subnet_ids                 = module.networking.private_subnet_ids
@@ -368,7 +368,7 @@ module "ecs_cluster" {
   project                   = var.project
   create_capacity_provider  = true
   capacity_provider_name    = "capacity-provider-ecs-ec2"
-  aws_autoscaling_group_arn = module.ec2_launch_configuration.autoscaling_group_arn
+  aws_autoscaling_group_arn = module.ec2_autoscaling_group.autoscaling_group_arn
 }
 
 resource "aws_service_discovery_private_dns_namespace" "segment" {
@@ -402,7 +402,7 @@ module "ecs_books_api_fargate" {
   launch_type          = "EC2"
   enable_autoscaling   = false
   autoscaling_settings = null
-  enable_alb = true
+  enable_alb           = true
 
   alb_listener = module.public_alb.alb_listener
   alb          = {
@@ -484,7 +484,7 @@ module "ecs_recommendations_api_fargate" {
   launch_type          = "EC2"
   enable_autoscaling   = false
   autoscaling_settings = null
-  enable_alb   = false
+  enable_alb           = false
 
   alb_listener = null
   alb          = null
@@ -555,7 +555,7 @@ module "ecs_users_api_fargate" {
   launch_type          = "EC2"
   enable_autoscaling   = false
   autoscaling_settings = null
-  enable_alb   = true
+  enable_alb           = true
 
   alb_listener = module.public_alb.alb_listener
   alb          = {

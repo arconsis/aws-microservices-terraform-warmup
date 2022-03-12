@@ -1,5 +1,5 @@
-variable "launch_configuration_name" {
-  description = "Name of launch configuration"
+variable "lauch_template_name" {
+  description = "Name of launch template"
   type        = string
 }
 
