@@ -38,3 +38,15 @@ variable "private_subnet_count" {
   type        = number
   description = "Private subnet count"
 }
+
+variable "public_subnet_additional_tags" {
+  default     = {}
+  description = "Additional resource tags"
+  type        = map(string)
+}
+
+variable "private_subnet_additional_tags" {
+  default     = {}
+  description = "Additional resource tags"
+  type        = map(string)
+}

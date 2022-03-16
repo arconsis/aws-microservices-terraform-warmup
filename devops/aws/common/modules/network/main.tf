@@ -43,12 +43,15 @@ resource "aws_subnet" "public" {
   cidr_block      = cidrsubnet(aws_vpc.this.cidr_block, 4, count.index)
   ipv6_cidr_block = cidrsubnet(aws_vpc.this.ipv6_cidr_block, 8, count.index)
 
-  tags = {
-    Name   = "aws-warmup-public-subnet"
-    Role   = "public"
-    VPC    = aws_vpc.this.id
-    Subnet = data.aws_availability_zones.available.names[count.index]
-  }
+  tags = merge(
+    var.public_subnet_additional_tags,
+    {
+      Name   = "aws-warmup-public-subnet"
+      Role   = "public"
+      VPC    = aws_vpc.this.id
+      Subnet = data.aws_availability_zones.available.names[count.index]
+    }
+  )
 }
 
 resource "aws_subnet" "private" {
@@ -59,12 +62,14 @@ resource "aws_subnet" "private" {
 
   cidr_block = cidrsubnet(aws_vpc.this.cidr_block, 4, count.index + var.public_subnet_count)
 
-  tags = {
-    Name   = "aws-warmup-public-subnet"
-    Role   = "private"
-    VPC    = aws_vpc.this.id
-    Subnet = data.aws_availability_zones.available.names[count.index]
-  }
+  tags = merge(
+    var.private_subnet_additional_tags, {
+      Name   = "aws-warmup-public-subnet"
+      Role   = "private"
+      VPC    = aws_vpc.this.id
+      Subnet = data.aws_availability_zones.available.names[count.index]
+    }
+  )
 }
 
 ################################################################################

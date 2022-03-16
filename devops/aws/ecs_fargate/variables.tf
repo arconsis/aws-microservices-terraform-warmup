@@ -37,16 +37,6 @@ variable "cidr_block" {
   default     = "10.0.0.0/16"
 }
 
-variable "enable_dns_support" {
-  description = "DNS support"
-  default     = true
-}
-
-variable "enable_dns_hostnames" {
-  description = "DNS hostnames"
-  default     = true
-}
-
 ################################################################################
 # Project metadata
 ################################################################################
