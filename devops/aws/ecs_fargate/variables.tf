@@ -50,6 +50,16 @@ variable "environment" {
   default     = "dev"
 }
 
+variable "default_tags" {
+  description = "Default tags to set to every resource"
+  type        = map(string)
+  default     = {
+    Project     = "ecs-ec2-aws-warmup"
+    ManagedBy   = "terraform"
+    Environment = "dev"
+  }
+}
+
 ################################################################################
 # ECS Configuration
 ################################################################################
@@ -408,13 +418,4 @@ variable "users_database_name" {
   description = "The name for the users DB"
   type        = string
   default     = "postgres"
-}
-
-variable "default_tags" {
-  description = "Default tags to set to every resource"
-  type        = map(string)
-  default     = {
-    Project   = "ecs-fargate-aws-warmup"
-    ManagedBy = "terraform"
-  }
 }

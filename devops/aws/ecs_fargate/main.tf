@@ -6,7 +6,6 @@ locals {
     scale_in_cooldown  = 60
     scale_out_cooldown = 900
   }
-  default_tags = merge({ Environment = var.environment, }, var.default_tags)
 }
 
 provider "aws" {
@@ -14,7 +13,7 @@ provider "aws" {
   profile                  = var.aws_profile
   region                   = var.aws_region
   default_tags {
-    tags = local.default_tags
+    tags = var.default_tags
   }
 }
 

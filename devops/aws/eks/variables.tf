@@ -10,14 +10,6 @@ variable "aws_profile" {
   description = "The AWS profile name"
   default     = "arconsis"
 }
-variable "default_tags" {
-  description = "Default tags to set to every resource"
-  type        = map(string)
-  default     = {
-    Project   = "ecs-fargate-aws-warmup"
-    ManagedBy = "terraform"
-  }
-}
 
 ################################################################################
 # Network Configuration
@@ -58,6 +50,16 @@ variable "cluster_name" {
 variable "environment" {
   description = "Indicate the environment"
   default     = "dev"
+}
+
+variable "default_tags" {
+  description = "Default tags to set to every resource"
+  type        = map(string)
+  default     = {
+    Project     = "ecs-ec2-aws-warmup"
+    ManagedBy   = "terraform"
+    Environment = "dev"
+  }
 }
 
 ################################################################################
